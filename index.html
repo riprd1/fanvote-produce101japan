@@ -2,93 +2,146 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRODUCE101JAPAN新世界ファン投票サイト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRODUCE101非公式ファン投票サイト</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f5f5f5; text-align: center; }
-h1 { color: #333; margin-top: 20px; }
-.container { display: flex; flex-wrap: wrap; justify-content: center; margin: 20px; }
-.card { border: 1px solid #ccc; border-radius: 8px; width: 120px; margin: 10px; padding: 10px; background: #fff; cursor: pointer; }
-.card img { width: 100px; height: 100px; border-radius: 50%; }
-.selected { border: 2px solid #007b00; }
-button { padding: 10px 20px; margin: 20px; font-size: 16px; }
-#complete { display: none; color: #007b00; font-size: 24px; margin-top: 20px; }
+  body { font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f6f6f6; margin:0; }
+  header { background:#fff; padding:12px; text-align:center; font-weight:900; font-size:20px; border-bottom:1px solid #ccc; position:sticky; top:0; z-index:10; }
+  main { max-width:600px; margin:0 auto; padding:12px; }
+  .membersGrid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+  .memberCard { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.08); text-align:center; padding:10px; cursor:pointer; transition:0.2s; }
+  .memberCard.selected { opacity:0.4; }
+  .memberCard img { width:100%; border-radius:12px; object-fit:cover; height:120px; }
+  .memberCardName { font-weight:900; margin-top:6px; font-size:14px; }
+  .profileBtn { margin-top:4px; font-size:12px; font-weight:900; color:#0080ff; text-decoration:none; display:inline-block; padding:4px 8px; border:1px solid #0080ff; border-radius:8px; }
 </style>
 </head>
 <body>
-
-<h1>PRODUCE101JAPAN新世界ファン投票サイト</h1>
-
-<div class="container" id="trainees"></div>
-
-<button id="voteBtn">投票する</button>
-
-<div id="complete">✅ 投票完了！</div>
+<header>日プ新世界 推し投票メーカー</header>
+<main>
+  <div class="membersGrid" id="membersGrid"></div>
+</main>
 
 <script>
-// ★サンプルデータ：練習生20人
-const traineesOnly = [
-{name:"アダム・ナガイ", img:"https://i.imgur.com/6QGzvRx.png", pid:"adamnagai"},
-{name:"中丸 晏寿", img:"https://i.imgur.com/KiZCKos.png", pid:"nakamaruaju"},
-{name:"オム・スアンカワーテン", img:"https://i.imgur.com/dDIFJSc.png", pid:"aomsuungkavathin"},
-{name:"アーチャー・ウイ", img:"https://i.imgur.com/5iIerqN.png", pid:"archeruy"},
-{name:"篠ヶ谷 歩夢", img:"https://i.imgur.com/YJAdh8q.png", pid:"shinogayaayumu"},
-{name:"小林 千悟", img:"https://i.imgur.com/Iu0hNBO.png", pid:"kobayashichisato"},
-{name:"加藤 大樹", img:"https://i.imgur.com/4fRk2EB.png", pid:"katodaiki"},
-{name:"カク・ドンミン", img:"https://i.imgur.com/xZSQqMh.png", pid:"kwakdongmin"},
-{name:"末川 瑛太", img:"https://i.imgur.com/alEjKCP.png", pid:"suekawaeita"},
-{name:"保里 瑛都", img:"https://i.imgur.com/IAhs4ZA.png", pid:"horieito"},
-{name:"金田 栄都", img:"https://i.imgur.com/tF7i1du.png", pid:"kanedaeito"},
-{name:"櫻井 楓真", img:"https://i.imgur.com/WIWI8Sx.png", pid:"sakuraifuma"},
-{name:"小笠原ジュゼッペ慧", img:"https://i.imgur.com/2oKn3Ma.jpeg", pid:"ogasawaragiuseppekei"},
-{name:"倉橋 吾槙", img:"https://i.imgur.com/hlEjYqR.png", pid:"kurahashigoten"},
-{name:"堀尾 聖", img:"https://i.imgur.com/5Qb5dRJ.png", pid:"horiohijiri"},
-{name:"瑞慶覧 太都", img:"https://i.imgur.com/siOPGIr.png", pid:"zukeranhiroto"},
-{name:"ユ・ヒョンスン", img:"https://i.imgur.com/lY3lXLj.png", pid:"yoohyeonseung"},
-{name:"岡田 彪吾", img:"https://i.imgur.com/zalwc1W.png", pid:"okadahyugo"},
-{name:"柳谷 伊冴", img:"https://i.imgur.com/gboCNWu.png", pid:"yanagiyaissa"},
-{name:"ユン・ジェヨン", img:"https://i.imgur.com/1yCImxd.png", pid:"yoonjaeyong"}
+const MAX_VOTE = 11;
+let selected = [];
+
+const trainees = [
+  // 練習生（全員20+候補10以外も含めた完全版）
+  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
+  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
+  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
+  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", id:"archeruy"},
+  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", id:"shinogayaayumu"},
+  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", id:"kobayashichisato"},
+  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", id:"katodaiki"},
+  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", id:"kwakdongmin"},
+  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", id:"suekawaeita"},
+  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", id:"horieito"},
+  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", id:"kanedaeito"},
+  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", id:"sakuraifuma"},
+  {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", id:"ogasawaragiuseppekei"},
+  {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", id:"kurahashigoten"},
+  {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", id:"horiohijiri"},
+  {name:"瑞慶覧 太都(HIROTO)", img:"https://i.imgur.com/siOPGIr.png", id:"zukeranhiroto"},
+  {name:"ユ・ヒョンスン(HYEONSEUNG)", img:"https://i.imgur.com/lY3lXLj.png", id:"yoohyeonseung"},
+  {name:"岡田 彪吾(HYUGO)", img:"https://i.imgur.com/zalwc1W.png", id:"okadahyugo"},
+  {name:"柳谷 伊冴(ISSA)", img:"https://i.imgur.com/gboCNWu.png", id:"yanagiyaissa"},
+  {name:"ユン・ジェヨン(JAEYONG)", img:"https://i.imgur.com/1yCImxd.png", id:"yoonjaeyong"},
+  {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", id:"chuangjay"},
+  {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", id:"maruojinichiro"},
+  {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", id:"kawabejoe"},
+  {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", id:"shinjunguk"},
+  {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", id:"kaneyasujunsei"},
+  {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", id:"unokaimu"},
+  {name:"多比 奏聖(KANADE)", img:"https://i.imgur.com/rdSJ6QX.png", id:"tabikanade"},
+  {name:"横山 奏夢(KANAME)", img:"https://i.imgur.com/0brlEw8.png", id:"yokoyamakaname"},
+  {name:"関 敬次郎(KEIJIRO)", img:"https://i.imgur.com/PHlkDUt.png", id:"sekikeijiro"},
+  {name:"髙松 敬祐(KEISUKE)", img:"https://i.imgur.com/bs4vfiF.png", id:"takamatsukeisuke"},
+  {name:"小野 慶人(KEITO)", img:"https://i.imgur.com/glfmRJE.png", id:"onokeito"},
+  {name:"西山 賢人(KENTO)", img:"https://i.imgur.com/izEXoBY.png", id:"nishiyamakento"},
+  {name:"河合 晃誠(KOSEI)", img:"https://i.imgur.com/E30eGfr.png", id:"kawaikosei"},
+  {name:"照井 康祐(KOSUKE)", img:"https://i.imgur.com/oDkwdFn.png", id:"teruikosuke"},
+  {name:"浅香 孝太郎(KOTARO)", img:"https://i.imgur.com/7eJxl8o.png", id:"asakakotaro"},
+  {name:"髙谷 京平(KYOHEI)", img:"https://i.imgur.com/CLU1cPO.png", id:"takayakyohei"},
+  {name:"田中 蒔(MAKI)", img:"https://i.imgur.com/No6Nybr.png", id:"tanakamaki"},
+  {name:"山根 武蔵(MUSASHI)", img:"https://i.imgur.com/Ou2XuDa.png", id:"yamanemusashi"},
+  {name:"土田 央修(OSUKE)", img:"https://i.imgur.com/Xs0WjIn.png", id:"tsuchidaosuke"},
+  {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", id:"horinoren"},
+  {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", id:"koshimizuren"},
+  {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", id:"chenrickey"},
+  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", id:"kamimotoriku"},
+  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", id:"hatobarikuto"},
+  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", id:"imaerikuto"},
+  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png", id:"kairikuya"},
+  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png", id:"ohserinto"},
+  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
+  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
+  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", id:"okadoryuga"},
+  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
+  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
+  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
+  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png", id:"ohshinhaeng"},
+  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png", id:"iwakishinji"},
+  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png", id:"miyazakishinsuke"},
+  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png", id:"nishizakishu"},
+  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", id:"yamashitashu"},
+  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", id:"parksiyoung"},
+  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", id:"satosora"},
+  {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", id:"tonosota"},
+  {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", id:"fujimakitaiga"},
+  {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", id:"matsudataiga"},
+  {name:"金倉 拓未(TAKUMI)", img:"https://i.imgur.com/O3gluG7.png", id:"kanakuratakumi"},
+  {name:"熊部 拓斗(K.TAKUTO)", img:"https://i.imgur.com/NaQURc7.png", id:"kumabetakuto"},
+  {name:"宮里 拓利(M.TAKUTO)", img:"https://i.imgur.com/5B8NMyF.png", id:"miyazatotakuto"},
+  {name:"南平 達矢(TATSUYA)", img:"https://i.imgur.com/jHnmGTs.png", id:"minamihiratatsuya"},
+  {name:"森井 輝(TERU)", img:"https://i.imgur.com/SAo1Rs4.png", id:"moriiteru"},
+  {name:"北林 天虎(TETORA)", img:"https://i.imgur.com/2gCwqHF.png", id:"kitabayashitetora"},
+  {name:"藤芳 辰弥(TOKIYA)", img:"https://i.imgur.com/9prpjvI.png", id:"fujiyoshitokiya"},
+  {name:"増田 倫希(TOMOKI)", img:"https://i.imgur.com/4JSh3HD.png", id:"masudatomoki"},
+  {name:"濱田 永遠(TOWA)", img:"https://i.imgur.com/Yap9beM.png", id:"hamadatowa"},
+  {name:"アギナルド・トリスタン・ジェームス(TRISTAN)", img:"https://i.imgur.com/wyeHbRo.png", id:"aguinaldotristanjames"},
+  {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", id:"liweize"},
+  {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", id:"yohanemmanuel"},
+  {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", id:"yadayoshiki"},
+  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
+  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
+  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
+  {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", id:"obayashiyusei"},
+  {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
+  {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"},
 ];
 
-// ★候補10人
-const candidates = [
-{name:"本荘 晃", img:"https://i.imgur.com/p976l8j.jpeg", pid:"honjoakira"},
-{name:"児島 歩夢", img:"https://i.imgur.com/1jtcgbB.png", pid:"kojimaayumu"},
-{name:"市川 大輝", img:"https://i.imgur.com/72FqxLz.png", pid:"ichikawadaiki"},
-{name:"川村 珀斗", img:"https://i.imgur.com/ua7RMig.png", pid:"kawamurahakuto"},
-{name:"村松 遼空", img:"https://i.imgur.com/3JEtKs6.png", pid:"muramatsuharuku"},
-{name:"髙城 暖人", img:"https://i.imgur.com/qdXIOpr.png", pid:"takagiharuto"},
-{name:"平島 輝", img:"https://i.imgur.com/P5gzRZh.png", pid:"hirashimahikaru"},
-{name:"櫻井 輝", img:"https://i.imgur.com/h2fBMUv.png", pid:"sakuraihikaru"},
-{name:"佐川 太一", img:"https://i.imgur.com/h2fBMUv.png", pid:"sagawahirokazu"},
-{name:"イ・ヒョンジェ", img:"https://i.imgur.com/wOhvKDu.png", pid:"leehyunjae"}
-];
+const membersGrid = document.getElementById("membersGrid");
 
-const allTrainees = [...traineesOnly, ...candidates];
-const container = document.getElementById("trainees");
-
-// カード作成
-allTrainees.forEach(t => {
-  const div = document.createElement("div");
-  div.className = "card";
-  div.dataset.pid = t.pid;
-  div.innerHTML = `<img src="${t.img}" alt="${t.name}"><div>${t.name}</div>`;
-  div.addEventListener("click", () => {
-    div.classList.toggle("selected");
+function renderMembers(){
+  membersGrid.innerHTML = "";
+  trainees.forEach((m,i)=>{
+    const card = document.createElement("div");
+    card.className = "memberCard" + (selected.includes(i) ? " selected" : "");
+    card.innerHTML = `
+      <img src="${m.img}" alt="${m.name}">
+      <div class="memberCardName">${m.name}</div>
+      <a class="profileBtn" href="https://produce101.jp/profile/detail/?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener">Profile</a>
+    `;
+    card.addEventListener("click", ()=>{
+      if(selected.includes(i)){
+        selected = selected.filter(n=>n!==i);
+      }else{
+        if(selected.length >= MAX_VOTE){
+          alert("投票は" + MAX_VOTE + "人までです！");
+          return;
+        }
+        selected.push(i);
+      }
+      renderMembers();
+    });
+    membersGrid.appendChild(card);
   });
-  container.appendChild(div);
-});
+}
 
-const voteBtn = document.getElementById("voteBtn");
-voteBtn.addEventListener("click", () => {
-  const selected = document.querySelectorAll(".selected");
-  if(selected.length !== 11){
-    alert("11人選んでください！");
-    return;
-  }
-  document.getElementById("complete").style.display = "block";
-});
+renderMembers();
 </script>
-
 </body>
 </html>
