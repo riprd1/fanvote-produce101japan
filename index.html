@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PRODUCE101JAPAN新世界ファン投票サイト</title>
+
+<style>
+  :root{
+    --bg:#f6f6f6;
+    --card:#ffffff;
+    --line:#e6e6e6;
+    --text:#111;
+    --muted:#666;
+    --shadow: 0 4px 14px rgba(0,0,0,.06);
+    --radius:14px;
+    --blue:#0080ff;
+
+    --slot: 86px;
+    --gap:  14px;
+
+    --exAvatar: 112px;
+    --exBorder: 8px;
+    --exGapX: 56px;
+    --exGapY: 30px;
+    --exName: 15px;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar{ padding: 12px 12px 10px; max-width: 980px; margin: 0 auto; }
+  h1{margin:0;font-size:18px;line-height:1.2}
+
+  main{max-width:980px;margin:0 auto;padding:12px;}
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* ===== 画面表示バナー ===== */
+  .banner{
+    height: 110px;
+    position: relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,120,200,.30), transparent 40%),
+      radial-gradient(circle at 80% 40%, rgba(120,160,255,.28), transparent 45%),
+      linear-gradient(135deg, #ffe7f4, #eef3ff);
+  }
+  .banner.hasImage{ background-size: cover; background-position: center; }
+  .banner::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.0), rgba(255,255,255,.35));
+    pointer-events:none;
+  }
+  .bannerTitle{
+    position:relative;
+    font-weight: 900;
+    letter-spacing: .04em;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(255,255,255,.9);
+    font-size: 13px;
+    z-index: 2;
+    white-space: nowrap;
+  }
+  .slotBadge{
+    position:absolute;
+    right: 12px;
+    bottom: 12px;
+    background: rgba(0,128,255,.92);
+    color: #fff;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.14);
+    z-index: 5;
+    white-space: nowrap;
+    pointer-events:none;
+  }
+
+  /* ===== 上：選択枠（背景画像そのまま） ===== */
+  .picksWrap{
+    padding: 12px 14px 8px;
+    background-image: url("https://i.imgur.com/lFGbXfI.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .picksRow{
+    display:flex;
+    justify-content:center;
+    gap: var(--gap);
+    flex-wrap: wrap;
+    row-gap: 14px;
+    padding: 12px 0 10px;
+  }
+  .slot{ width: var(--slot); text-align:center; }
+  .avatar{
+    width: var(--slot);
+    height: var(--slot);
+    border-radius:999px;
+    border: 5px solid var(--blue);
+    background:#fff;
+    overflow: visible;
+    box-shadow: 0 8px 18px rgba(0,0,0,.10);
+    margin: 0 auto;
+    position:relative;
+    z-index: 1;
+  }
+  .avatar img{
+    width:100%;
+    height:100%;
+    border-radius:999px;
+    object-fit: cover;
+    object-position: 50% 35%;
+    display:block;
+
+    image-rendering: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  .rank{
+    position:absolute;
+    left:50%;
+    bottom:-12px;
+    transform: translateX(-50%);
+    background: var(--blue);
+    color:#fff;
+    border-radius:999px;
+    font-weight:900;
+    font-size: 9px;
+    padding: 6px 8px;
+    line-height:1;
+    min-width: 2.0em;
+    text-align:center;
+    z-index: 2;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18);
+    pointer-events:none;
+  }
+  .name{
+    margin-top: 14px;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+  .empty .avatar{
+    opacity:.16;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 34px;
+    font-weight: 900;
+    color:#555;
+  }
+  .empty .rank{display:none;}
+  .empty .name{display:none;}
+
+  .reorder{ display:none; gap:10px; justify-content:center; margin-top: 8px; }
+  body.reorder-on .reorder{ display:flex; }
+  .reorder button{
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding: 10px 10px 12px;
+    border-top: 1px solid #f1f1f1;
+    background:#fff;
+  }
+  button{
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+  }
+  button:active{transform:scale(.98)}
+  .primary{border-color:#cfe2ff;}
+  .danger{border-color:#ffd6d6;}
+  .mode{border-color:#e7e7e7;}
+
+  /* TikTok誘導（サイト上） */
+  .tiktokBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 900;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #000000, #222222);
+    border: 1px solid #111;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18);
+  }
+  .tiktokBtn:active{ transform: scale(.98); }
+  .tiktokHint{
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 900;
+    color: #555;
+    text-align: center;
+    letter-spacing: .02em;
+  }
+  .tiktokWrap{ display:flex; flex-direction:column; align-items:center; }
+
+  /* ===== 一覧：2列ボタン ===== */
+  .listCard{
+    margin-top: 12px;
+    padding: 10px;
+
+    background-image: url("https://i.imgur.com/lUMY5QA.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .sectionTitle{
+    font-size: 18px;
+    font-weight: 900;
+    padding: 6px 2px 10px;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+
+  .searchRow{ display:flex; gap:10px; align-items:center; margin-bottom: 10px; }
+  .search{
+    flex:1;
+    display:flex;
+    align-items:center;
+    border:1px solid #ddd;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background:#fff;
+  }
+  .search input{ border:none; outline:none; width:100%; font-size: 15px; background:transparent; }
+  #membersWrap{
+    max-height: 52vh;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    border-top:1px solid #f1f1f1;
+    padding-top: 6px;
+    overscroll-behavior: contain;
+  }
+  .membersGrid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+    padding: 10px 6px 6px;
+  }
+  .memberCard{
+    border: 1px solid #e8e8e8;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    padding: 12px 10px 10px;
+    cursor:pointer;
+    user-select:none;
+    text-align:center;
+    position:relative;
+  }
+  .memberCard:active{ transform:scale(.99); }
+  .memberCardThumb{
+    width:100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow:hidden;
+    background:#f7f7f7;
+    border:1px solid #f0f0f0;
+  }
+  .memberCardThumb img{
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    object-position: 50% 20%;
+    display:block;
+
+    image-rendering: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  .memberCardName{ margin-top:10px; font-weight:900; font-size:14px; line-height:1.2; }
+  .memberCardSub{ margin-top:4px; font-size:12px; color: var(--muted); }
+  .memberCard.selected{ opacity:.35; filter: grayscale(1); pointer-events:none; }
+  .memberCardProfile{
+    position:absolute;
+    right:10px;
+    top:10px;
+    font-size:12px;
+    font-weight:900;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid #cfe2ff;
+    color: var(--blue);
+    background: rgba(255,255,255,.92);
+    text-decoration:none;
+    line-height:1;
+  }
+
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.78);
+    color:#fff;
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    display:none;
+    z-index:999;
+  }
+
+  /* ===== 投票完了ポップ（緑チェック） ===== */
+  .voteSuccess{
+    position: fixed;
+    inset: 0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(0,0,0,.35);
+    z-index: 99999;
+  }
+  .voteSuccess.show{ display:flex; }
+
+  .voteSuccessBox{
+    background: rgba(255,255,255,.94);
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 18px;
+    padding: 18px 18px 14px;
+    box-shadow: 0 18px 46px rgba(0,0,0,.22);
+    backdrop-filter: blur(10px);
+    text-align:center;
+    min-width: 240px;
+  }
+
+  .voteCheck{
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 44px;
+    font-weight: 1000;
+    color: #fff;
+    background: #23c552;
+    box-shadow: 0 12px 24px rgba(35,197,82,.35);
+    transform: scale(.72);
+    opacity: 0;
+  }
+
+  .voteSuccessText{
+    font-weight: 1000;
+    letter-spacing: .02em;
+    font-size: 15px;
+    color:#111;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  .voteSuccess.show .voteCheck{
+    animation: popCheck .46s cubic-bezier(.2, 1.2, .25, 1) forwards;
+  }
+  .voteSuccess.show .voteSuccessText{
+    animation: popText .36s ease forwards;
+    animation-delay: .08s;
+  }
+
+  @keyframes popCheck{
+    0%   { transform: scale(.65); opacity: 0; }
+    70%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1.00); opacity: 1; }
+  }
+  @keyframes popText{
+    0%   { transform: translateY(8px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ===== 追加カード（誕生日/運勢/ランキング） ===== */
+  .miniCard{
+    margin-top: 12px;
+    padding: 12px;
+  }
+  .miniTitle{
+    font-weight: 1000;
+    margin: 2px 0 10px;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid #e8e8e8;
+    background:#fff;
+    font-weight: 900;
+  }
+  .grid3{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .fortuneBox{
+    border: 1px solid #eee;
+    border-radius: 14px;
+    background:#fff;
+    padding: 10px;
+  }
+  .fortuneLabel{
+    font-weight: 1000;
+    color:#333;
+    margin-bottom: 8px;
+  }
+  .fortuneList{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #eaeaea;
+    background:#fafafa;
+    font-weight: 900;
+    font-size: 12px;
+  }
+  .fortuneComment{
+    margin-top: 10px;
+    font-weight: 900;
+    color:#333;
+    line-height:1.5;
+    font-size: 13px;
+  }
+  .rankScroll{
+    max-height: 60vh;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .rankRow{
+    display:flex; align-items:center; gap:10px;
+    background:#fff; border:1px solid #eee; border-radius:12px; padding:10px;
+  }
+  .rankNum{ font-weight:1000; width:2.6em; text-align:right; }
+  .rankImg{ width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid #eee; }
+  .rankName{ flex:1; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rankVotes{ font-weight:1000; color:#0080ff; }
+
+</style>
+</head>
+
+<body>
+<header>
+  <div class="topbar">
+    <h1>PRODUCE101JAPAN新世界ファン投票サイト</h1>
+  </div>
+</header>
+
+<main>
+
+  <!-- ★誕生日 -->
+  <div class="card miniCard">
+    <div class="miniTitle">🎂 本日誕生日（練習生＋練習生候補）</div>
+    <div id="birthdayWrap" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+    <div id="birthdayEmpty" style="margin-top:8px;color:#666;font-weight:900;display:none;">本日誕生日のメンバーはいません</div>
+  </div>
+
+  <!-- ★今日の運勢（AI生成：DBから読む） -->
+  <div class="card miniCard">
+    <div class="miniTitle">🍀 今日の運勢（KST）</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <div class="pill">更新：<span id="fortuneDate">—</span></div>
+      <div class="pill">※毎日KST 0:00にAIが生成（表示はその日固定）</div>
+    </div>
+
+    <div class="grid3">
+      <div class="fortuneBox">
+        <div class="fortuneLabel">強運MBTI TOP3</div>
+        <div id="mbtiList" class="fortuneList"></div>
+      </div>
+      <div class="fortuneBox">
+        <div class="fortuneLabel">強運星座 TOP3</div>
+        <div id="zodiacList" class="fortuneList"></div>
+      </div>
+      <div class="fortuneBox">
+        <div class="fortuneLabel">ひとこと</div>
+        <div id="fortuneComment" class="fortuneComment">生成中…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★投票＋一覧 -->
+  <div class="card" id="picksCard">
+    <div id="banner" class="banner">
+      <div class="bannerTitle">PRODUCE101JAPAN新世界ファン投票サイト</div>
+      <div class="slotBadge" id="slotBadge">KSTで1日1回</div>
+    </div>
+
+    <div class="picksWrap" id="picksWrap">
+      <div class="picksRow" id="picksRow"></div>
+    </div>
+
+    <div class="actions">
+      <!-- ★投票ボタン：11人ちょうど＋CAPTCHA必須 -->
+      <button class="primary" type="button" onclick="submitVote()">投票する（11人必須）</button>
+
+      <!-- 任意：ローカル画像保存（あなたの元コードを残したい場合はここにボタン追加してOK） -->
+      <button type="button" onclick="undo()">1人戻す</button>
+      <button class="danger" type="button" onclick="resetAll()">リセット</button>
+      <button class="mode" type="button" id="reorderBtn" onclick="toggleReorder()">並び替えモード：OFF</button>
+
+      <div class="tiktokWrap">
+        <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener">TikTokフォローお願い🥹</a>
+        <div class="tiktokHint">↑ここをクリック</div>
+      </div>
+
+      <!-- Turnstile CAPTCHA -->
+      <div style="width:100%; display:flex; justify-content:center; padding-top:4px;">
+        <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY"></div>
+      </div>
+
+      <div style="width:100%; text-align:center; color:#666; font-weight:900; font-size:12px;">
+        ※投票はKST基準で1日1回 / 11人ちょうど必須 / CAPTCHA必須
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ランキング -->
+  <div class="card miniCard">
+    <div class="miniTitle">🏆 ランキング（全員表示・0票も含む）</div>
+    <div style="display:flex; gap:10px; justify-content:center; padding:0 0 10px; flex-wrap:wrap;">
+      <button type="button" class="mode" onclick="setRankingMode('daily')">今日（KST）</button>
+      <button type="button" class="mode" onclick="setRankingMode('total')">累計</button>
+      <button type="button" class="mode" onclick="refreshRankings()">更新</button>
+    </div>
+    <div id="rankWrap" class="rankScroll"></div>
+  </div>
+
+  <!-- 一覧 -->
+  <div class="listCard">
+    <div class="sectionTitle">一覧（押して追加）</div>
+    <div class="searchRow">
+      <div class="search">
+        <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
+      </div>
+      <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
+    </div>
+
+    <div id="membersWrap">
+      <div id="members" class="membersGrid"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast">処理中…</div>
+
+<!-- 投票完了ポップ -->
+<div id="voteSuccess" class="voteSuccess" aria-hidden="true">
+  <div class="voteSuccessBox">
+    <div class="voteCheck" aria-hidden="true">✓</div>
+    <div class="voteSuccessText">投票が完了しました</div>
+  </div>
+</div>
+
+<!-- Turnstile -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<!-- Supabase -->
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  // ===========================
+  // ★ここを自分の値に置換
+  // ===========================
+  const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  const FUNCTIONS_URL = "https://YOUR_PROJECT_REF.supabase.co/functions/v1";
+  // 例: submit-vote Edge Function URL -> `${FUNCTIONS_URL}/submit-vote`
+  // ===========================
+
+  window.__CFG = { SUPABASE_URL, SUPABASE_ANON_KEY, FUNCTIONS_URL };
+  window.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
+<script>
+/* =========================================================
+  使い方（重要）
+  1) YOUR_TURNSTILE_SITE_KEY を自分のSite Keyに置換
+  2) Supabase URL / anon key / functions URL を置換
+  3) Edge Function: submit-vote を作っておく（Turnstile検証＆投票）
+  4) RPC: get_daily_ranking / get_total_ranking を作っておく
+  5) AI運勢：daily_fortunes テーブル（例）を作って、KST 0:00に生成して保存
+     - ここでは “読むだけ” 実装
+  6) 誕生日は、下の BIRTHDAYS に id -> "MM-DD" を入れる（練習生＋候補）
+     （将来DB管理にするなら、ここをDBから読むように変更すればOK）
+========================================================= */
+
+const HEADER_IMAGE_URL = "https://i.imgur.com/nYBRUdd.png";
+const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+
+// ★誕生日データ（必須）: id -> "MM-DD"（練習生＋候補 両方入れてOK）
+// 例: { "adamnagai": "02-08", "honjoakira": "11-03" }
+const BIRTHDAYS = {
+  // TODO: ここに追加していく
+};
+
+// ★運勢（AI生成）を保存してあるテーブル名（あなたのDBに合わせて変更）
+const FORTUNE_TABLE = "daily_fortunes"; // 例: date, mbti_top3(text[]), zodiac_top3(text[]), comment(text)
+
+// 投票は 11人固定
+const MAX_PICK = 11;
+
+const STORAGE_KEY  = "fanvote_selected_v1";
+
+let showingCandidates = false;
+
+// ランキングモード
+let rankingMode = "daily";
+
+// 既存：表示補助
+function profileUrlById(id){
+  if(!id) return "https://produce101.jp/profile/detail/?lang=ja";
+  return "https://produce101.jp/profile/detail/?id=" + encodeURIComponent(id) + "&lang=ja";
+}
+function displayName(full){
+  return (full || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
+}
+function alphaPart(full){
+  const m = (full||"").match(/\(([^)]*)\)/);
+  return m ? "(" + m[1] + ")" : "";
+}
+
+/* ===== KST日付ユーティリティ ===== */
+function kstDateKey(){
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year:"numeric", month:"2-digit", day:"2-digit" });
+  return fmt.format(new Date()); // YYYY-MM-DD
+}
+function kstMonthDay(){
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", month:"2-digit", day:"2-digit" });
+  const s = fmt.format(new Date()); // MM-DD
+  return s;
+}
+function kstNowParts(){
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", second:"2-digit",
+    hourCycle:"h23"
+  });
+  const parts = fmt.formatToParts(new Date());
+  const get = (t)=>parts.find(p=>p.type===t)?.value;
+  return {
+    y: Number(get("year")),
+    m: Number(get("month")),
+    d: Number(get("day")),
+    hh: Number(get("hour")),
+    mm: Number(get("minute")),
+    ss: Number(get("second"))
+  };
+}
+function msUntilNextKstMidnight(){
+  const p = kstNowParts();
+  const secNow = p.hh*3600 + p.mm*60 + p.ss;
+  const secToNext = 24*3600 - secNow;
+  return Math.max(500, secToNext * 1000 + 50);
+}
+function scheduleDailyAutoRefresh(){
+  const first = msUntilNextKstMidnight();
+  window.setTimeout(async () => {
+    // 日付切り替えタイミング
+    await refreshBirthdays();
+    await refreshFortune();
+    await refreshRankings();
+    scheduleDailyAutoRefresh();
+  }, first);
+}
+
+/* ===== 投票完了ポップ ===== */
+function showVoteSuccessPop(){
+  const el = document.getElementById("voteSuccess");
+  if(!el) return;
+  el.classList.add("show");
+  el.setAttribute("aria-hidden","false");
+  window.clearTimeout(showVoteSuccessPop._t);
+  showVoteSuccessPop._t = window.setTimeout(() => {
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden","true");
+  }, 1100);
+}
+document.addEventListener("click", (e)=>{
+  const el = document.getElementById("voteSuccess");
+  if(!el) return;
+  if(el.classList.contains("show") && e.target === el){
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden","true");
+  }
+});
+
+/* ====== 練習生データ（あなたの「そのまま」） ====== */
+const traineesOnly = [
+  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
+  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
+  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
+  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", id:"archeruy"},
+  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", id:"shinogayaayumu"},
+  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", id:"kobayashichisato"},
+  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", id:"katodaiki"},
+  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", id:"kwakdongmin"},
+  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", id:"suekawaeita"},
+  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", id:"horieito"},
+  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", id:"kanedaeito"},
+  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", id:"sakuraifuma"},
+  {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", id:"ogasawaragiuseppekei"},
+  {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", id:"kurahashigoten"},
+  {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", id:"horiohijiri"},
+  {name:"瑞慶覧 太都(HIROTO)", img:"https://i.imgur.com/siOPGIr.png", id:"zukeranhiroto"},
+  {name:"ユ・ヒョンスン(HYEONSEUNG)", img:"https://i.imgur.com/lY3lXLj.png", id:"yoohyeonseung"},
+  {name:"岡田 彪吾(HYUGO)", img:"https://i.imgur.com/zalwc1W.png", id:"okadahyugo"},
+  {name:"柳谷 伊冴(ISSA)", img:"https://i.imgur.com/gboCNWu.png", id:"yanagiyaissa"},
+  {name:"ユン・ジェヨン(JAEYONG)", img:"https://i.imgur.com/1yCImxd.png", id:"yoonjaeyong"},
+  {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", id:"chuangjay"},
+  {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", id:"maruojinichiro"},
+  {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", id:"kawabejoe"},
+  {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", id:"shinjunguk"},
+  {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", id:"kaneyasujunsei"},
+  {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", id:"unokaimu"},
+  {name:"多比 奏聖(KANADE)", img:"https://i.imgur.com/rdSJ6QX.png", id:"tabikanade"},
+  {name:"横山 奏夢(KANAME)", img:"https://i.imgur.com/0brlEw8.png", id:"yokoyamakaname"},
+  {name:"関 敬次郎(KEIJIRO)", img:"https://i.imgur.com/PHlkDUt.png", id:"sekikeijiro"},
+  {name:"髙松 敬祐(KEISUKE)", img:"https://i.imgur.com/bs4vfiF.png", id:"takamatsukeisuke"},
+  {name:"小野 慶人(KEITO)", img:"https://i.imgur.com/glfmRJE.png", id:"onokeito"},
+  {name:"西山 賢人(KENTO)", img:"https://i.imgur.com/izEXoBY.png", id:"nishiyamakento"},
+  {name:"河合 晃誠(KOSEI)", img:"https://i.imgur.com/E30eGfr.png", id:"kawaikosei"},
+  {name:"照井 康祐(KOSUKE)", img:"https://i.imgur.com/oDkwdFn.png", id:"teruikosuke"},
+  {name:"浅香 孝太郎(KOTARO)", img:"https://i.imgur.com/7eJxl8o.png", id:"asakakotaro"},
+  {name:"髙谷 京平(KYOHEI)", img:"https://i.imgur.com/CLU1cPO.png", id:"takayakyohei"},
+  {name:"田中 蒔(MAKI)", img:"https://i.imgur.com/No6Nybr.png", id:"tanakamaki"},
+  {name:"山根 武蔵(MUSASHI)", img:"https://i.imgur.com/Ou2XuDa.png", id:"yamanemusashi"},
+  {name:"土田 央修(OSUKE)", img:"https://i.imgur.com/Xs0WjIn.png", id:"tsuchidaosuke"},
+  {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", id:"horinoren"},
+  {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", id:"koshimizuren"},
+  {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", id:"chenrickey"},
+  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", id:"kamimotoriku"},
+  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", id:"hatobarikuto"},
+  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", id:"imaerikuto"},
+  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png", id:"kairikuya"},
+  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png", id:"ohserinto"},
+  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
+  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
+  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", id:"okadoryuga"},
+  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
+  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
+  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
+  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png", id:"ohshinhaeng"},
+  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png", id:"iwakishinji"},
+  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png", id:"miyazakishinsuke"},
+  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png", id:"nishizakishu"},
+  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", id:"yamashitashu"},
+  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", id:"parksiyoung"},
+  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", id:"satosora"},
+  {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", id:"tonosota"},
+  {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", id:"fujimakitaiga"},
+  {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", id:"matsudataiga"},
+  {name:"金倉 拓未(TAKUMI)", img:"https://i.imgur.com/O3gluG7.png", id:"kanakuratakumi"},
+  {name:"熊部 拓斗(K.TAKUTO)", img:"https://i.imgur.com/NaQURc7.png", id:"kumabetakuto"},
+  {name:"宮里 拓利(M.TAKUTO)", img:"https://i.imgur.com/5B8NMyF.png", id:"miyazatotakuto"},
+  {name:"南平 達矢(TATSUYA)", img:"https://i.imgur.com/jHnmGTs.png", id:"minamihiratatsuya"},
+  {name:"森井 輝(TERU)", img:"https://i.imgur.com/SAo1Rs4.png", id:"moriiteru"},
+  {name:"北林 天虎(TETORA)", img:"https://i.imgur.com/2gCwqHF.png", id:"kitabayashitetora"},
+  {name:"藤芳 辰弥(TOKIYA)", img:"https://i.imgur.com/9prpjvI.png", id:"fujiyoshitokiya"},
+  {name:"増田 倫希(TOMOKI)", img:"https://i.imgur.com/4JSh3HD.png", id:"masudatomoki"},
+  {name:"濱田 永遠(TOWA)", img:"https://i.imgur.com/Yap9beM.png", id:"hamadatowa"},
+  {name:"アギナルド・トリスタン・ジェームス(TRISTAN)", img:"https://i.imgur.com/wyeHbRo.png", id:"aguinaldotristanjames"},
+  {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", id:"liweize"},
+  {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", id:"yohanemmanuel"},
+  {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", id:"yadayoshiki"},
+  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
+  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
+  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
+  {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", id:"obayashiyusei"},
+  {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
+  {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
+];
+
+const candidates = [
+  {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
+  {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
+  {name:"市川 大輝(I.DAIKI)", img:"https://i.imgur.com/72FqxLz.png", id:"ichikawadaiki"},
+  {name:"川村 珀斗(HAKUTO)", img:"https://i.imgur.com/ua7RMig.png", id:"kawamurahakuto"},
+  {name:"村松 遼空(HARUKU)", img:"https://i.imgur.com/3JEtKs6.png", id:"muramatsuharuku"},
+  {name:"髙城 暖人(HARUTO)", img:"https://i.imgur.com/qdXIOpr.png", id:"takagiharuto"},
+  {name:"平島 輝(H.HIKARU)", img:"https://i.imgur.com/P5gzRZh.png", id:"hirashimahikaru"},
+  {name:"櫻井 輝(S.HIKARU)", img:"https://i.imgur.com/h2fBMUv.png", id:"sakuraihikaru"},
+  {name:"佐川 太一(HIROKAZU)", img:"https://i.imgur.com/h2fBMUv.png", id:"sagawahirokazu"},
+  {name:"イ・ヒョンジェ(HYUNJAE)", img:"https://i.imgur.com/wOhvKDu.png", id:"leehyunjae"},
+  {name:"阿部 樹(ITSUKI)", img:"https://i.imgur.com/TaTAc2L.png", id:"abeitsuki"},
+  {name:"イ・ジュンフン(JOONGHOON)", img:"https://i.imgur.com/4utwyOJ.png", id:"leejoonghoon"},
+  {name:"リュウ・カイチ(KAICHI)", img:"https://i.imgur.com/FGbdGcI.png", id:"liukaichi"},
+  {name:"黒﨑 貫汰(KANTA)", img:"https://i.imgur.com/j75eoO7.png", id:"kurosakikanta"},
+  {name:"黄 敬眞(KEISHIN)", img:"https://i.imgur.com/oE7w4D7.png", id:"kokeishin"},
+  {name:"釼持 吉成(KINARI)", img:"https://i.imgur.com/GWAtiwS.png", id:"kenmotsukinari"},
+  {name:"小澤 昂心(KOSHIN)", img:"https://i.imgur.com/pn0zB7F.png", id:"ozawakoshin"},
+  {name:"青沼 昂史朗(KOSHIRO)", img:"https://i.imgur.com/MDhTcs8.png", id:"aonumakoshiro"},
+  {name:"小林 廣(KOU)", img:"https://i.imgur.com/RAoUIhC.png", id:"kobayashikou"},
+  {name:"森 明育(MEI)", img:"https://i.imgur.com/eR0BZVs.png", id:"morimei"},
+  {name:"マイケル ミン・マカフリ(MICHAEL MINH)", img:"https://i.imgur.com/6S8BWAA.png", id:"michaelminhmccaffrey"},
+  {name:"パトリック ファン・レ(PATRICK)", img:"https://i.imgur.com/YRvJQYc.png", id:"patrickphanle"},
+  {name:"笠原 蓮(KA.REN)", img:"https://i.imgur.com/ZLgNm7o.png", id:"kasahararen"},
+  {name:"江口 蓮翔(E.RENTO)", img:"https://i.imgur.com/ewXd8NH.png", id:"eguchirento"},
+  {name:"小林 蓮翔(K.RENTO)", img:"https://i.imgur.com/t2NbxIU.png", id:"kobayashirento"},
+  {name:"落合 利温(RIO)", img:"https://i.imgur.com/HdTZUdu.png", id:"ochiairio"},
+  {name:"水上 琉偉(M.RUI)", img:"https://i.imgur.com/DiUA9bw.png", id:"mizugamirui"},
+  {name:"小谷内 瑠嘉(RUKA)", img:"https://i.imgur.com/V2XnsQ6.png", id:"koyauchiruka"},
+  {name:"齊藤 惺(SEI)", img:"https://i.imgur.com/9HIRvNd.png", id:"saitosei"},
+  {name:"藤本 真成(SHINSEI)", img:"https://i.imgur.com/qTooOuS.png", id:"fujimotoshinsei"},
+  {name:"飯田 柊馬(SHUMA)", img:"https://i.imgur.com/awBBn6j.png", id:"iidashuma"},
+  {name:"松田 颯吾(SOGO)", img:"https://i.imgur.com/Y1MQK3k.png", id:"matsudasogo"},
+  {name:"髙橋 空良(T.SORA)", img:"https://i.imgur.com/czFpgjm.png", id:"takahashisora"},
+  {name:"西田 颯梓(SOSHI)", img:"https://i.imgur.com/51RMIB6.png", id:"nishidasoshi"},
+  {name:"岡本 拓士(O.TAKUTO)", img:"https://i.imgur.com/TGP6sbe.png", id:"okamototakuto"},
+  {name:"大澤 佑冴(YUGO)", img:"https://i.imgur.com/5Gg1E1M.png", id:"osawayugo"},
+  {name:"藤井 雄聖(F.YUSEI)", img:"https://i.imgur.com/prsNOtG.png", id:"fujiiyusei"},
+  {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", id:"okamotoyuto"}
+];
+
+const trainees = traineesOnly.concat(candidates);
+const TRAINEES_COUNT = traineesOnly.length;
+
+let selected = loadSelected();
+
+/* バナー画像反映 */
+(function setupBanners(){
+  const banner = document.getElementById("banner");
+  if(HEADER_IMAGE_URL){
+    banner.classList.add("hasImage");
+    banner.style.backgroundImage = "url('" + HEADER_IMAGE_URL + "')";
+  }
+})();
+
+/* ===== UI描画 ===== */
+function drawPicks(){
+  const row = document.getElementById("picksRow");
+  row.innerHTML = "";
+
+  for(let i=0; i<MAX_PICK; i++){
+    const slot = document.createElement("div");
+
+    if(i < selected.length){
+      const m = trainees[selected[i]];
+      slot.className = "slot";
+      slot.innerHTML = `
+        <div class="avatar">
+          <img src="${m.img || FALLBACK_IMG}" alt="">
+          <div class="rank">${i + 1}</div>
+        </div>
+        <div class="name">${displayName(m.name)}</div>
+        <div class="reorder">
+          <button type="button" onclick="moveLeft(${i})">←</button>
+          <button type="button" onclick="moveRight(${i})">→</button>
+        </div>
+      `;
+    }else{
+      slot.className = "slot empty";
+      slot.innerHTML = `<div class="avatar">+</div>`;
+    }
+    row.appendChild(slot);
+  }
+}
+
+function drawMembers(){
+  const q = (document.getElementById("search").value || "").trim().toLowerCase();
+  const membersEl = document.getElementById("members");
+  membersEl.innerHTML = "";
+
+  const start = showingCandidates ? TRAINEES_COUNT : 0;
+  const end   = showingCandidates ? trainees.length : TRAINEES_COUNT;
+
+  for(let i=start; i<end; i++){
+    const m = trainees[i];
+    if(q && (m.name||"").toLowerCase().indexOf(q) === -1) continue;
+
+    const card = document.createElement("div");
+    card.className = "memberCard" + (selected.indexOf(i) !== -1 ? " selected" : "");
+    const purl = profileUrlById(m.id);
+
+    card.innerHTML = `
+      <div class="memberCardThumb"><img src="${m.img || FALLBACK_IMG}" alt=""></div>
+      <div class="memberCardName">${displayName(m.name)}</div>
+      <div class="memberCardSub">${alphaPart(m.name)}</div>
+      <a class="memberCardProfile" href="${purl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">profile</a>
+    `;
+    card.addEventListener("click", () => add(i));
+    membersEl.appendChild(card);
+  }
+}
+
+function toggleCandidates(e){
+  if(e && e.preventDefault) e.preventDefault();
+  showingCandidates = !showingCandidates;
+  document.getElementById("toggleListBtn").textContent = showingCandidates ? "練習生" : "練習生候補";
+  drawMembers();
+}
+
+/* 選択操作 */
+function add(i){
+  if(selected.length >= MAX_PICK){ alert("11人ちょうど選んでください"); return; }
+  if(selected.indexOf(i) !== -1) return;
+  selected.push(i);
+  saveSelected();
+  drawPicks();
+  drawMembers();
+}
+function undo(){
+  selected.pop();
+  saveSelected();
+  drawPicks();
+  drawMembers();
+}
+function resetAll(){
+  selected = [];
+  saveSelected();
+  drawPicks();
+  drawMembers();
+}
+
+/* 並び替え */
+let reorderMode = false;
+function toggleReorder(){
+  reorderMode = !reorderMode;
+  document.body.classList.toggle("reorder-on", reorderMode);
+  document.getElementById("reorderBtn").textContent = "並び替えモード：" + (reorderMode ? "ON" : "OFF");
+}
+function swap(a,b){
+  if(a<0||b<0||a>=selected.length||b>=selected.length) return;
+  const t = selected[a]; selected[a]=selected[b]; selected[b]=t;
+  saveSelected();
+  drawPicks(); drawMembers();
+}
+function moveLeft(pos){ swap(pos, pos-1); }
+function moveRight(pos){ swap(pos, pos+1); }
+
+function saveSelected(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(selected)); }catch(e){}
+}
+function loadSelected(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(n => Number.isInteger(n)) : [];
+  }catch(e){ return []; }
+}
+
+/* ===== Supabase：匿名ログイン ===== */
+async function ensureAuth(){
+  const { data: { session } } = await window.sb.auth.getSession();
+  if(session) return;
+  const { error } = await window.sb.auth.signInAnonymously();
+  if(error) throw error;
+}
+
+/* ===== 投票（Edge Function経由） ===== */
+async function submitVote(){
+  // ★11人ちょうど必須
+  if(selected.length !== 11){
+    alert("11人ちょうど選んでから投票してください");
+    return;
+  }
+
+  // Turnstile token
+  const turnstileToken = window.turnstile?.getResponse?.();
+  if(!turnstileToken){
+    alert("CAPTCHAを完了してください");
+    return;
+  }
+
+  // trainee ids（重複除去して 11 ちょうど）
+  const ids = selected.map(idx => trainees[idx]?.id).filter(Boolean);
+  const unique = Array.from(new Set(ids));
+  if(unique.length !== 11){
+    alert("同じメンバーを重複して選んでいる可能性があります（11人ちょうどにしてください）");
+    return;
+  }
+
+  const toast = document.getElementById("toast");
+  toast.style.display = "block";
+  toast.textContent = "投票中…";
+
+  try{
+    await ensureAuth();
+    const { data: { session } } = await window.sb.auth.getSession();
+    const accessToken = session?.access_token;
+    if(!accessToken) throw new Error("ログインに失敗しました");
+
+    const cfg = window.__CFG;
+    const res = await fetch(`${cfg.FUNCTIONS_URL}/submit-vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        trainee_ids: unique,
+        turnstile_token: turnstileToken,
+      })
+    });
+
+    const out = await res.json().catch(()=>({}));
+    if(!res.ok){
+      if(out?.error === "already_voted_today"){
+        alert("今日はすでに投票済みです（KST 기준で1日1回）");
+      }else if(out?.error === "captcha_failed"){
+        alert("CAPTCHAに失敗しました。もう一度お試しください");
+        window.turnstile?.reset?.();
+      }else{
+        alert("投票エラー：" + (out?.details || out?.error || res.status));
+      }
+      return;
+    }
+
+    // 成功演出
+    showVoteSuccessPop();
+    window.turnstile?.reset?.();
+
+    // 反映：ランキング更新
+    await refreshRankings();
+  }catch(e){
+    alert("投票に失敗しました：" + (e?.message || e));
+  }finally{
+    toast.style.display = "none";
+  }
+}
+
+/* ===== 誕生日表示（練習生＋候補） ===== */
+async function refreshBirthdays(){
+  const md = kstMonthDay(); // MM-DD
+  const todays = trainees.filter(m => (BIRTHDAYS[m.id] || "") === md);
+
+  const wrap = document.getElementById("birthdayWrap");
+  const empty = document.getElementById("birthdayEmpty");
+  wrap.innerHTML = "";
+
+  if(todays.length === 0){
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  todays.forEach(m=>{
+    const el = document.createElement("div");
+    el.className = "pill";
+    el.innerHTML = `
+      <img src="${m.img}" style="width:34px;height:34px;border-radius:999px;object-fit:cover;border:1px solid #eee;">
+      <span>${displayName(m.name)}</span>
+    `;
+    wrap.appendChild(el);
+  });
+}
+
+/* ===== 今日の運勢（AI生成済みをDBから読む） ===== */
+async function refreshFortune(){
+  const date = kstDateKey();
+  document.getElementById("fortuneDate").textContent = date;
+
+  // DBにその日分がまだ無い可能性もあるので「生成中」表示にしておく
+  const mbtiList = document.getElementById("mbtiList");
+  const zodiacList = document.getElementById("zodiacList");
+  const commentEl = document.getElementById("fortuneComment");
+  mbtiList.innerHTML = "";
+  zodiacList.innerHTML = "";
+  commentEl.textContent = "生成中…";
+
+  try{
+    await ensureAuth();
+
+    // 例：daily_fortunes の列想定:
+    // date (text or date) / mbti_top3 (text[]) / zodiac_top3 (text[]) / comment (text)
+    const { data, error } = await window.sb
+      .from(FORTUNE_TABLE)
+      .select("*")
+      .eq("date", date)
+      .maybeSingle();
+
+    if(error) throw error;
+    if(!data){
+      commentEl.textContent = "生成中…（0:00直後は少し遅れることがあります）";
+      return;
+    }
+
+    const mbti = Array.isArray(data.mbti_top3) ? data.mbti_top3 : [];
+    const zod = Array.isArray(data.zodiac_top3) ? data.zodiac_top3 : [];
+    const comment = data.comment || "—";
+
+    mbtiList.innerHTML = mbti.slice(0,3).map(x=>`<span class="tag">${x}</span>`).join("");
+    zodiacList.innerHTML = zod.slice(0,3).map(x=>`<span class="tag">${x}</span>`).join("");
+    commentEl.textContent = comment;
+
+  }catch(e){
+    commentEl.textContent = "運勢の取得に失敗しました";
+  }
+}
+
+/* ===== ランキング（全員表示・0票補完） ===== */
+function setRankingMode(mode){
+  rankingMode = mode === "total" ? "total" : "daily";
+  refreshRankings();
+}
+
+function buildAllWithZero(countRows){
+  const counts = new Map();
+  (countRows || []).forEach(r=>{
+    counts.set(r.trainee_id, Number(r.votes || 0));
+  });
+
+  const all = trainees.map(m => ({
+    trainee_id: m.id,
+    name: m.name,
+    img_url: m.img,
+    votes: counts.get(m.id) ?? 0
+  }));
+
+  all.sort((a,b)=>{
+    if(b.votes !== a.votes) return b.votes - a.votes;
+    return String(a.name).localeCompare(String(b.name), "ja");
+  });
+
+  return all;
+}
+
+function renderRankingAll(rows, title){
+  const wrap = document.getElementById("rankWrap");
+  wrap.innerHTML = `
+    <div style="font-weight:1000; margin:0 0 10px;">${title}</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      ${rows.map((r,i)=>`
+        <div class="rankRow">
+          <div class="rankNum">${i+1}</div>
+          <img class="rankImg" src="${r.img_url}" alt="">
+          <div class="rankName">${displayName(r.name)}</div>
+          <div class="rankVotes">${r.votes}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+async function refreshRankings(){
+  const wrap = document.getElementById("rankWrap");
+  wrap.innerHTML = `<div style="font-weight:900;color:#666;">ランキング取得中…</div>`;
+
+  try{
+    await ensureAuth();
+
+    if(rankingMode === "daily"){
+      const { data, error } = await window.sb.rpc("get_daily_ranking", { p_date: null });
+      if(error) throw error;
+      const all = buildAllWithZero(data || []);
+      renderRankingAll(all, "今日のランキング（KST）");
+    }else{
+      const { data, error } = await window.sb.rpc("get_total_ranking");
+      if(error) throw error;
+      const all = buildAllWithZero(data || []);
+      renderRankingAll(all, "累計ランキング");
+    }
+  }catch(e){
+    wrap.innerHTML = `<div style="font-weight:900;color:#b30000;">ランキング取得に失敗：${e?.message || e}</div>`;
+  }
+}
+
+/* 初期化 */
+(async function initAll(){
+  drawPicks();
+  drawMembers();
+  await refreshBirthdays();
+  await refreshFortune();
+  await refreshRankings();
+  scheduleDailyAutoRefresh();
+})();
+</script>
+</body>
+</html>
