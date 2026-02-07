@@ -1036,7 +1036,7 @@ async function submitVote(){
     if(!accessToken) throw new Error("ログインに失敗しました");
 
     const cfg = window.__CFG;
-    const res = await fetch(`${cfg.FUNCTIONS_URL}/submit-vote`, {
+    const res = await fetch(`${cfg.FUNCTIONS_URL}/quick-worker`, {
       method: "POST",
       headers: {
         "Content-Type":"application/json",
