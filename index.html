@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>投票（11人）</title>
-
   <style>
     :root{
       --bd:#e6e6e6;
@@ -30,11 +29,99 @@
       background-repeat: no-repeat;
     }
 
-    .page{ padding: 16px; }
+    .page{
+      padding: 16px;
+    }
 
-    h1{font-size:18px;margin:10px 0 10px}
+    /* ===== 追加：ランキング（ヘッダー直下） ===== */
+    .rankWrap{
+      padding: 12px 16px 0;
+    }
+    .rankCard{
+      border:1px solid var(--bd);
+      border-radius:16px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .rankHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      background: var(--bg);
+      border-bottom:1px solid var(--bd);
+    }
+    .rankHead h2{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+    }
+    .rankMeta{
+      font-size:12px;
+      color: var(--sub);
+      white-space:nowrap;
+    }
+    .rankBody{
+      padding: 10px 12px 12px;
+    }
+    .rankStatus{
+      font-size:12px;
+      color: var(--sub);
+      margin: 0 0 8px;
+    }
+    .rankTable{
+      width:100%;
+      border-collapse: collapse;
+      font-size:13px;
+    }
+    .rankTable th, .rankTable td{
+      padding: 8px 6px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .rankTable th{
+      text-align:left;
+      color: var(--sub);
+      font-weight:800;
+      font-size:12px;
+    }
+    .rankNum{
+      width:44px;
+      font-weight:900;
+    }
+    .rankVotes{
+      width:70px;
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+    }
+    .rankId{
+      word-break: break-all;
+      font-weight:700;
+    }
+    .rankLink{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      text-decoration:none;
+      color:#2f6fe8;
+      font-weight:900;
+      font-size:12px;
+      padding:8px 10px;
+      border:1px solid rgba(47,111,232,.25);
+      border-radius:999px;
+      background: rgba(47,111,232,.06);
+    }
+    .rankActions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    h1{font-size:18px;margin:12px 0 10px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .sub{color:var(--sub);font-size:12px}
+    .pill{background:var(--pill);padding:6px 10px;border-radius:999px;font-size:12px}
     .btn{
       padding:10px 12px;border:1px solid var(--bd);
       border-radius:12px;background:#fff;font-weight:800;cursor:pointer;
@@ -44,67 +131,6 @@
     input[type="text"]{
       padding:10px 12px;border:1px solid var(--bd);
       border-radius:12px;min-width:180px;flex:1;
-    }
-
-    /* =========================
-       ✅ ランキング（ヘッダー直下）
-    ========================= */
-    .rankingWrap{
-      border:1px solid var(--bd);
-      border-radius:16px;
-      background:#fff;
-      padding:12px;
-      margin-top: 12px;
-    }
-    .rankingHead{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .rankingHead h2{
-      margin:0;
-      font-size:14px;
-      font-weight:900;
-    }
-    .rankingStatus{
-      font-size:12px;
-      color:var(--sub);
-      white-space:nowrap;
-    }
-    .rankingTableWrap{
-      overflow:auto;
-      border:1px solid var(--bd);
-      border-radius:12px;
-    }
-    table.rankingTable{
-      width:100%;
-      border-collapse:collapse;
-      min-width: 420px;
-      background:#fff;
-    }
-    .rankingTable th,
-    .rankingTable td{
-      padding:10px 10px;
-      border-bottom:1px solid var(--bd);
-      font-size:13px;
-      text-align:left;
-      vertical-align:middle;
-      white-space:nowrap;
-    }
-    .rankingTable thead th{
-      background:#fafafa;
-      font-weight:900;
-    }
-    .rankNo{
-      font-weight:900;
-      width:70px;
-    }
-    .voteNum{
-      font-weight:900;
-      text-align:right;
-      width:90px;
     }
 
     /* ===== 上：選択11人 ===== */
@@ -147,14 +173,14 @@
       position:relative;
       user-select:none;
       -webkit-user-select:none;
-      touch-action: pan-x;
+      touch-action: pan-x; /* 横スクロール許可 */
     }
     .slot.filled{
       border-style:solid;
       border-color:#dedede;
       padding:0;
       overflow:hidden;
-      cursor: pointer;
+      cursor: pointer; /* タップで削除 */
     }
     .slot img{
       width:100%;
@@ -164,25 +190,9 @@
       background:#f2f2f2;
     }
 
-    /* ===== 一覧エリア 背景画像 ===== */
-    .listSection{
-      margin-top: 14px;
-      border-radius: 18px;
-      overflow: hidden;
-      background-image: url("https://i.imgur.com/eTuwSDL.png");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      padding: 14px;
-      border: 1px solid var(--bd);
-    }
-    .listSection .overlay{
-      background: rgba(255,255,255,.82);
-      border-radius: 16px;
-      padding: 12px;
-    }
-
+    /* ===== 見出しと操作行 ===== */
     .listHeader{
+      margin-top:14px;
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -193,6 +203,7 @@
       font-size:14px;
       font-weight:900;
     }
+    .sub{color:var(--sub);font-size:12px}
 
     .controlsRow{
       margin-top:10px;
@@ -225,6 +236,25 @@
       opacity:1;
     }
 
+    /* ===== 一覧エリア 背景画像 ===== */
+    .listSection{
+      margin-top: 14px;
+      border-radius: 18px;
+      overflow: hidden;
+      background-image: url("https://i.imgur.com/eTuwSDL.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      padding: 14px;
+      border: 1px solid var(--bd);
+    }
+    /* 文字が読みにくい場合に備えて薄い下地 */
+    .listSection .overlay{
+      background: rgba(255,255,255,.82);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
     /* ===== 下：2列グリッド ===== */
     .grid{
       margin-top:10px;
@@ -245,6 +275,7 @@
     .avatar{
       width:100%;
       aspect-ratio: 4 / 5;
+      height:auto;
       border-radius:16px;
       overflow:hidden;
       background:#f2f2f2;
@@ -272,7 +303,7 @@
       backdrop-filter: blur(6px);
     }
 
-    .info{text-align:center}
+    .info{min-width:0;text-align:center}
     .name{
       font-weight:900;
       font-size:14px;
@@ -286,8 +317,9 @@
       opacity: .45;
       filter: grayscale(1);
       outline: 2px solid rgba(0,0,0,.08);
-      pointer-events: none;
+      pointer-events: none; /* ★これで2回目タップ無効 */
     }
+    /* profileは押せる（選択済みでもプロフィールは見たい場合） */
     .picked .profileBtn{
       pointer-events: auto;
       opacity: 1;
@@ -296,47 +328,44 @@
 
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
-      table.rankingTable{min-width: 0;}
     }
   </style>
 </head>
 
 <body>
+  <!-- ヘッダー画像 -->
   <div class="header"></div>
 
-  <div class="page">
-
-    <!-- ✅ ランキング（ヘッダー直下） -->
-    <div class="rankingWrap" id="rankingSection">
-      <div class="rankingHead">
-        <h2>ランキング（総合）</h2>
-        <div class="row" style="gap:8px;">
-          <button id="reloadRanking" class="btn" type="button" style="padding:8px 10px;border-radius:12px;">
-            更新
-          </button>
-          <div id="rankingStatus" class="rankingStatus">未更新</div>
+  <!-- ✅ 追加：ランキング（ヘッダーの下） -->
+  <div class="rankWrap">
+    <div class="rankCard">
+      <div class="rankHead">
+        <h2>ランキング</h2>
+        <div class="rankActions">
+          <a id="rankOpenSheet" class="rankLink" href="#" target="_blank" rel="noopener noreferrer">集計シート</a>
+          <span id="rankUpdated" class="rankMeta">読み込み中…</span>
         </div>
       </div>
-
-      <div class="rankingTableWrap">
-        <table class="rankingTable" id="rankingTable">
-          <thead>
-            <tr>
-              <th class="rankNo">順位</th>
-              <th>名前</th>
-              <th class="voteNum">票数</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div class="sub" style="margin-top:8px;">
-        ※ランキングはスプレッドシート(CSV公開)から読み込みます
+      <div class="rankBody">
+        <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
+        <div style="overflow:auto;">
+          <table class="rankTable" id="rankTable">
+            <thead>
+              <tr>
+                <th class="rankNum">#</th>
+                <th>ID</th>
+                <th class="rankVotes">票</th>
+              </tr>
+            </thead>
+            <tbody id="rankTbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- ✅ ランキングの下に投票タイトル -->
+  <div class="page">
+    <!-- ✅ ここに「投票（1回で11人選択）」を置く（ランキングの下） -->
     <h1>投票（1回で11人選択）</h1>
 
     <div class="selectedWrap">
@@ -356,6 +385,7 @@
       </div>
     </div>
 
+    <!-- 一覧エリア（背景画像つき） -->
     <div class="listSection">
       <div class="overlay">
         <div class="listHeader">
@@ -378,6 +408,14 @@
 
 <script>
 /* =========================================================
+   ✅ ランキングCSV（あなたが貼ったURL）
+========================================================= */
+const RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXFpCzSxBGA2HUi1iiTUAgbRTbKXn2StuWI-Og82Wcv1z02sAN5QMizZztFdC8-7He31T-ecZq8cPa/pub?gid=1769988094&single=true&output=csv";
+
+/* 表示件数（上位何人見せる？） */
+const RANKING_SHOW_TOP = 30;
+
+/* =========================================================
    ✅ Googleフォーム送信設定（あなたのURLから作成済み）
 ========================================================= */
 const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSe0PiR-AbilNCBcoiwWnnhTlEIIniAx09KPKLUP0xIz7xMl5w/formResponse";
@@ -386,14 +424,8 @@ const ENTRY_DATE    = "entry.1759038206";
 const ENTRY_IDS     = "entry.1038992501";
 const BLOCK_DUPLICATE_PER_DAY = true;
 
-/* =========================================================
-   ✅ ランキング読み込み（ここをあなたのCSV公開URLに差し替え）
-   例：.../pub?output=csv
-========================================================= */
-const RANKING_CSV_URL = ""; // ←ここにCSV URL
-
 /* ====== 練習生データ（あなたのまま） ====== */
-const traineesOnly = [/* 省略なし：あなたが貼った内容そのまま */
+const traineesOnly = [
   {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
   {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
   {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
@@ -478,6 +510,7 @@ const traineesOnly = [/* 省略なし：あなたが貼った内容そのまま 
   {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
 ];
+
 const candidates = [
   {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
   {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
@@ -518,9 +551,11 @@ const candidates = [
   {name:"藤井 雄聖(F.YUSEI)", img:"https://i.imgur.com/prsNOtG.png", id:"fujiiyusei"},
   {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", id:"okamotoyuto"}
 ];
+/* ====== ここまで ====== */
 
 const MAX = 11;
 
+// UI elements
 const toggleBtn = document.getElementById("toggleBtn");
 const modeText  = document.getElementById("modeText");
 const searchEl  = document.getElementById("search");
@@ -532,16 +567,19 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
-const rankingStatusEl = document.getElementById("rankingStatus");
-const rankingTableEl  = document.getElementById("rankingTable");
-const reloadRankingBtn = document.getElementById("reloadRanking");
+// ranking UI
+const rankTbody = document.getElementById("rankTbody");
+const rankStatus = document.getElementById("rankStatus");
+const rankUpdated = document.getElementById("rankUpdated");
+const rankOpenSheet = document.getElementById("rankOpenSheet");
 
-let showCandidates = false;
-let selected = [];
+// state
+let showCandidates = false;     // 初期は練習生
+let selected = [];              // 並び順もこれで保持
 let selectedSet = new Set();
 let lastActionStack = [];
 
-/* ===== 検索強化 ===== */
+// ==== 検索強化（英字/記号/全角半角）====
 function normalizeText(s){
   return (s || "")
     .toString()
@@ -553,6 +591,7 @@ function buildSearchKey(t){
   return [t.name || "", t.id || ""].map(normalizeText).join(" ");
 }
 
+// 合体データ（searchKey付き）
 const trainees = traineesOnly.map(x => {
   const obj = {...x, group:"trainee"};
   obj.searchKey = buildSearchKey(obj);
@@ -565,27 +604,30 @@ const candis = candidates.map(x => {
 });
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
-/* ===== scroll保持 ===== */
+// ==== scroll位置保持 ====
 function preserveScroll(fn){
   const y = window.scrollY;
   fn();
   requestAnimationFrame(() => window.scrollTo(0, y));
 }
 
-/* ===== 表示モード ===== */
-function currentList(){ return showCandidates ? candis : trainees; }
+// ==== 表示モード ====
+function currentList(){
+  return showCandidates ? candis : trainees;
+}
 function setModeUI(){
   modeText.textContent = showCandidates ? "練習生候補" : "練習生";
   toggleBtn.classList.toggle("on", !showCandidates);
 }
 
-/* ===== 上の11枠（タップで削除） ===== */
+// ==== 上の11枠（×なし：タップで削除） ====
 function renderSlots(){
   slotsEl.innerHTML = "";
   for(let i=0;i<MAX;i++){
     const id = selected[i];
     const slot = document.createElement("div");
     slot.className = "slot" + (id ? " filled" : "");
+    slot.setAttribute("data-index", String(i));
     if(id) slot.setAttribute("data-id", id);
 
     if(id){
@@ -598,6 +640,8 @@ function renderSlots(){
     slotsEl.appendChild(slot);
   }
 }
+
+// 上の枠：タップで削除
 slotsEl.addEventListener("click", (e) => {
   const slot = e.target.closest(".slot.filled");
   if(!slot) return;
@@ -606,17 +650,20 @@ slotsEl.addEventListener("click", (e) => {
   removeSelected(id);
 });
 
-/* ===== 一覧 ===== */
+// ==== 一覧（2列） ====
 function renderGrid(){
   const qRaw = searchEl.value.trim();
   const q = normalizeText(qRaw);
 
   const list = currentList().filter(t => {
     if(!q) return true;
+
     const rawHit =
       (t.name || "").toLowerCase().includes(qRaw.toLowerCase()) ||
       (t.id || "").toLowerCase().includes(qRaw.toLowerCase());
+
     const keyHit = (t.searchKey || "").includes(q);
+
     return rawHit || keyHit;
   });
 
@@ -637,6 +684,7 @@ function renderGrid(){
            target="_blank" rel="noopener noreferrer"
            data-profile-link="1">profile</a>
       </div>
+
       <div class="info">
         <div class="name">${t.name}</div>
         <div class="meta">${showCandidates ? "練習生候補" : "練習生"}</div>
@@ -646,8 +694,10 @@ function renderGrid(){
   }
 }
 
+// 一覧：カード押しで追加/解除（profileは除外）
 gridEl.addEventListener("click", (e) => {
   if (e.target.closest('[data-profile-link="1"]')) return;
+
   const card = e.target.closest(".card");
   if(!card) return;
   const id = card.getAttribute("data-id");
@@ -659,9 +709,9 @@ gridEl.addEventListener("click", (e) => {
   });
 });
 
-/* ===== 選択処理 ===== */
+// ==== 選択処理 ====
 function addSelected(id){
-  if(selectedSet.has(id)) return;
+  if(selectedSet.has(id)) return; // 2回目追加防止
   if(selected.length >= MAX){
     alert(`最大${MAX}人までです`);
     return;
@@ -699,12 +749,12 @@ function clearAll(){
   updateAll();
 }
 
-/* ===== 日付（Tokyo） ===== */
+// ==== 日付（Tokyo） ====
 function todayTokyo(){
   return new Date().toLocaleDateString("en-CA", { timeZone:"Asia/Tokyo" });
 }
 
-/* ===== userKey ===== */
+// ==== userKey（端末ごとに固定） ====
 function getOrCreateUserKey(){
   const keyName = "vote_userKey_v1";
   let k = localStorage.getItem(keyName);
@@ -716,7 +766,7 @@ function getOrCreateUserKey(){
   return k;
 }
 
-/* ===== 二重送信ブロック ===== */
+// ==== 二重送信ブロック（端末内） ====
 function lastVoteToken(){
   return localStorage.getItem("vote_lastToken_v1") || "";
 }
@@ -724,12 +774,13 @@ function setLastVoteToken(token){
   localStorage.setItem("vote_lastToken_v1", token);
 }
 
-/* ===== Googleフォーム送信 ===== */
+// ==== Googleフォームへ送信 ====
 async function submitToGoogleForm(){
   if(selected.length !== MAX){
     alert(`11人選んでから投票してください`);
     return;
   }
+
   const userKey = getOrCreateUserKey();
   const date = todayTokyo();
   const token = `${userKey}|${date}`;
@@ -739,7 +790,8 @@ async function submitToGoogleForm(){
     return;
   }
 
-  const idsStr = JSON.stringify(selected.slice(0, MAX));
+  const ids = selected.slice(0, MAX);
+  const idsStr = JSON.stringify(ids);
 
   const fd = new FormData();
   fd.append(ENTRY_USERKEY, userKey);
@@ -750,12 +802,20 @@ async function submitToGoogleForm(){
     voteBtn.disabled = true;
     voteBtn.textContent = "送信中…";
 
-    await fetch(FORM_ACTION, { method:"POST", mode:"no-cors", body:fd });
+    await fetch(FORM_ACTION, {
+      method: "POST",
+      mode: "no-cors",
+      body: fd
+    });
 
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
     alert("投票を送信しました！\n（スプレッドシートに反映されます）");
+
     clearAll();
+
+    // ✅ 追加：送信後にランキングも更新
+    fetchRankingCSV();
   }catch(err){
     console.error(err);
     alert("送信に失敗しました。\nネット接続やブラウザ設定を確認してください。");
@@ -764,95 +824,7 @@ async function submitToGoogleForm(){
   }
 }
 
-/* ===== ランキング：CSV読み込み =====
-   CSVは「名前,票数」または「id,票数」みたいな2列想定
-*/
-function parseCSV(text){
-  const rows = text.split(/\r?\n/).filter(r => r.trim() !== "");
-  return rows.map(line => {
-    // 超シンプルCSV（カンマ区切り）想定
-    const cols = line.split(",");
-    return cols.map(c => c.replace(/^"|"$/g,"").trim());
-  });
-}
-
-function renderRankingTable(items){
-  const tbody = rankingTableEl.querySelector("tbody");
-  tbody.innerHTML = "";
-
-  items.forEach((it, idx) => {
-    const tr = document.createElement("tr");
-    const rank = idx + 1;
-    const nameOrId = it.name || it.id || "";
-    const votes = it.votes ?? 0;
-
-    tr.innerHTML = `
-      <td class="rankNo">${rank}</td>
-      <td>${escapeHtml(nameOrId)}</td>
-      <td class="voteNum">${Number(votes).toLocaleString("ja-JP")}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#39;");
-}
-
-async function loadRanking(){
-  if(!RANKING_CSV_URL){
-    rankingStatusEl.textContent = "CSV URL未設定（RANKING_CSV_URLに貼ってね）";
-    return;
-  }
-  rankingStatusEl.textContent = "読み込み中…";
-
-  try{
-    // GitHub Pagesはキャッシュされやすいのでクエリで回避
-    const url = RANKING_CSV_URL + (RANKING_CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-    const res = await fetch(url, { cache:"no-store" });
-    if(!res.ok) throw new Error("CSV fetch failed: " + res.status);
-    const text = await res.text();
-
-    const data = parseCSV(text);
-
-    // 1行目がヘッダの場合を軽く吸収
-    // 期待: [nameOrId, votes]
-    const items = [];
-    for(const row of data){
-      if(row.length < 2) continue;
-      const a = row[0];
-      const b = row[1];
-
-      // ヘッダっぽい文字を除外
-      if(/票|votes|count/i.test(a) || /票|votes|count/i.test(b)){
-        continue;
-      }
-      const votes = Number(String(b).replace(/[^\d\-\.]/g,"")) || 0;
-
-      // trainee/candidate配列にidがあるなら名前に変換できる
-      const byName = [...byId.values()].find(x => x.id === a) ? byId.get(a) : null;
-      const name = byName?.name || a;
-
-      items.push({ id:a, name, votes });
-    }
-
-    items.sort((x,y) => (y.votes - x.votes) || (x.name > y.name ? 1 : -1));
-    renderRankingTable(items);
-
-    const now = new Date().toLocaleString("ja-JP", { timeZone:"Asia/Tokyo" });
-    rankingStatusEl.textContent = "更新: " + now;
-  }catch(e){
-    console.error(e);
-    rankingStatusEl.textContent = "読み込み失敗（CSV公開/URL確認）";
-  }
-}
-
-/* ===== 更新 ===== */
+// ==== 更新 ====
 function updateAll(){
   countEl.textContent = String(selected.length);
   voteBtn.disabled = selected.length !== MAX;
@@ -861,7 +833,7 @@ function updateAll(){
   renderGrid();
 }
 
-/* ===== イベント ===== */
+// ==== トグル切替 ====
 toggleBtn.addEventListener("click", () => {
   preserveScroll(() => {
     showCandidates = !showCandidates;
@@ -869,22 +841,167 @@ toggleBtn.addEventListener("click", () => {
     renderGrid();
   });
 });
-searchEl.addEventListener("input", () => preserveScroll(() => renderGrid()));
+
+// ==== 検索 ====
+searchEl.addEventListener("input", () => {
+  preserveScroll(() => renderGrid());
+});
+
+// ==== ボタン ====
 undoBtn.addEventListener("click", () => preserveScroll(() => undo()));
 clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
 });
-voteBtn.addEventListener("click", () => submitToGoogleForm());
+voteBtn.addEventListener("click", () => {
+  submitToGoogleForm();
+});
 
-reloadRankingBtn.addEventListener("click", () => loadRanking());
+/* =========================================================
+   ✅ ランキングCSV読み込み（Google Sheets -> CSV）
+========================================================= */
 
-/* ===== 初期描画 ===== */
+// （CSVの "集計シート" ボタンリンク用：pub? から元シートは直接開けないので、csv自体を開く）
+rankOpenSheet.href = RANKING_CSV_URL;
+
+// 簡易CSVパーサ（引用符対応）
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    const next = text[i+1];
+
+    if(ch === '"' ){
+      if(inQuotes && next === '"'){ // "" -> "
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if(!inQuotes && ch === ","){
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+
+    if(!inQuotes && (ch === "\n" || ch === "\r")){
+      if(ch === "\r" && next === "\n") i++;
+      row.push(cur);
+      rows.push(row);
+      row = [];
+      cur = "";
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  // last
+  if(cur.length || row.length){
+    row.push(cur);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function nowTokyoTime(){
+  return new Date().toLocaleString("ja-JP", { timeZone:"Asia/Tokyo" });
+}
+
+function buildRankingLink(id){
+  return `https://produce101.jp/profile/detail/?id=${encodeURIComponent(id)}`;
+}
+
+async function fetchRankingCSV(){
+  try{
+    rankStatus.textContent = "ランキングを読み込み中…";
+    rankUpdated.textContent = "読み込み中…";
+    rankTbody.innerHTML = "";
+
+    // キャッシュ回避（更新が遅い時用）
+    const url = RANKING_CSV_URL + "&_ts=" + Date.now();
+
+    const res = await fetch(url, { method:"GET", cache:"no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+
+    const rows = parseCSV(text)
+      .map(r => r.map(x => (x ?? "").toString().trim()))
+      .filter(r => r.some(x => x !== ""));
+
+    if(rows.length < 2){
+      throw new Error("CSVが空っぽっぽい");
+    }
+
+    // 先頭行ヘッダー想定: id,votes,rank（順が違っても対応）
+    const header = rows[0].map(h => h.toLowerCase());
+    const idxId = header.indexOf("id");
+    const idxVotes = header.indexOf("votes");
+    const idxRank = header.indexOf("rank");
+
+    if(idxId === -1 || idxVotes === -1){
+      throw new Error("CSVの列名が想定と違う（id/votesが見つからない）");
+    }
+
+    const data = rows.slice(1).map(r => ({
+      id: r[idxId] || "",
+      votes: Number((r[idxVotes] || "0").replace(/[^\d\-]/g,"")) || 0,
+      rank: idxRank !== -1 ? (Number((r[idxRank] || "").replace(/[^\d\-]/g,"")) || null) : null
+    })).filter(x => x.id);
+
+    // rankが入ってるならrank優先で並べる。なければvotes降順
+    data.sort((a,b) => {
+      if(a.rank != null && b.rank != null) return a.rank - b.rank;
+      if(b.votes !== a.votes) return b.votes - a.votes;
+      return a.id.localeCompare(b.id);
+    });
+
+    const top = data.slice(0, RANKING_SHOW_TOP);
+
+    const frag = document.createDocumentFragment();
+    top.forEach((x, i) => {
+      const tr = document.createElement("tr");
+      const shownRank = (x.rank != null) ? x.rank : (i+1);
+      tr.innerHTML = `
+        <td class="rankNum">${shownRank}</td>
+        <td class="rankId">
+          <a href="${buildRankingLink(x.id)}" target="_blank" rel="noopener noreferrer">${x.id}</a>
+        </td>
+        <td class="rankVotes">${x.votes}</td>
+      `;
+      frag.appendChild(tr);
+    });
+
+    rankTbody.innerHTML = "";
+    rankTbody.appendChild(frag);
+
+    rankStatus.textContent = `上位${top.length}件を表示中（全${data.length}件）`;
+    rankUpdated.textContent = `更新: ${nowTokyoTime()}`;
+  }catch(err){
+    console.error(err);
+    rankStatus.textContent = "ランキングの読み込みに失敗…（公開設定/URL/ネットを確認してね）";
+    rankUpdated.textContent = "更新: 失敗";
+  }
+}
+
+// 初期描画
 setModeUI();
 renderSlots();
 renderGrid();
 updateAll();
-loadRanking(); // ページを開いたら自動でランキング更新
+
+// ✅ ページ表示時にランキング取得
+fetchRankingCSV();
+
+// ✅ 30秒ごとに自動更新（要らなければ消してOK）
+setInterval(fetchRankingCSV, 30000);
 </script>
 </body>
 </html>
