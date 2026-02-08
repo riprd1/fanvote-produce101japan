@@ -226,14 +226,16 @@
     }
     .meta{font-size:12px;color:var(--sub);margin-top:4px}
 
-    /* ★修正：選択済みはグレー表示（一覧で分かりやすく） */
+    /* 選択済み：グレー＆再選択不可っぽく見せる */
     .picked{
       opacity: .45;
       filter: grayscale(1);
       outline: 2px solid rgba(0,0,0,.08);
+      pointer-events: none; /* ★これで2回目タップ無効 */
     }
-    /* profileは押せる＆見えやすい */
+    /* profileは押せる（選択済みでもプロフィールは見たい場合） */
     .picked .profileBtn{
+      pointer-events: auto;
       opacity: 1;
       filter: none;
     }
@@ -249,7 +251,7 @@
   <div class="header"></div>
 
   <div class="page">
-    <h1>PRODUCE101JAPAN新世界非公式ファン投票（1回で11人選択）</h1>
+    <h1>投票（1回で11人選択）</h1>
 
     <div class="selectedWrap">
       <div class="selectedTitle">
@@ -290,6 +292,22 @@
   </div>
 
 <script>
+/* =========================================================
+   ✅ Googleフォーム送信設定（あなたのURLから作成済み）
+   ---------------------------------------------------------
+   フォームURL:
+   https://docs.google.com/forms/d/e/1FAIpQLSe0PiR-AbilNCBcoiwWnnhTlEIIniAx09KPKLUP0xIz7xMl5w/viewform
+   ↓ 送信用は末尾を formResponse にする
+========================================================= */
+const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSe0PiR-AbilNCBcoiwWnnhTlEIIniAx09KPKLUP0xIz7xMl5w/formResponse";
+
+// entry番号（あなたが貼ったURLから取得）
+const ENTRY_USERKEY = "entry.926427886";
+const ENTRY_DATE    = "entry.1759038206";
+const ENTRY_IDS     = "entry.1038992501";
+
+/* ★ 同じ端末・同じ日で二重送信を止める（不要なら false に） */
+const BLOCK_DUPLICATE_PER_DAY = true;
 
 /* ====== 練習生データ（あなたのまま） ====== */
 const traineesOnly = [/* 省略なし：あなたが貼った内容そのまま */ 
@@ -463,7 +481,6 @@ const candis = candidates.map(x => {
   obj.searchKey = buildSearchKey(obj);
   return obj;
 });
-
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
 // ==== scroll位置保持 ====
@@ -611,6 +628,85 @@ function clearAll(){
   updateAll();
 }
 
+// ==== 日付（Tokyo） ====
+function todayTokyo(){
+  // "YYYY-MM-DD"
+  return new Date().toLocaleDateString("en-CA", { timeZone:"Asia/Tokyo" });
+}
+
+// ==== userKey（端末ごとに固定） ====
+function getOrCreateUserKey(){
+  const keyName = "vote_userKey_v1";
+  let k = localStorage.getItem(keyName);
+  if(!k){
+    // 端末IDっぽいものを生成
+    const rand = (crypto?.randomUUID?.() || (Math.random().toString(16).slice(2) + Date.now().toString(16)));
+    k = "u_" + rand.slice(0, 12);
+    localStorage.setItem(keyName, k);
+  }
+  return k;
+}
+
+// ==== 二重送信ブロック（端末内） ====
+function lastVoteToken(){
+  return localStorage.getItem("vote_lastToken_v1") || "";
+}
+function setLastVoteToken(token){
+  localStorage.setItem("vote_lastToken_v1", token);
+}
+
+// ==== Googleフォームへ送信 ====
+async function submitToGoogleForm(){
+  if(selected.length !== MAX){
+    alert(`11人選んでから投票してください`);
+    return;
+  }
+
+  const userKey = getOrCreateUserKey();
+  const date = todayTokyo();
+  const token = `${userKey}|${date}`;
+
+  if(BLOCK_DUPLICATE_PER_DAY && lastVoteToken() === token){
+    alert("この端末では今日すでに投票済みです。\n（別の端末/別ブラウザなら別扱いになります）");
+    return;
+  }
+
+  const ids = selected.slice(0, MAX); // 念のため
+
+  // Googleフォームに送る値（文字列）
+  const idsStr = JSON.stringify(ids);
+
+  const fd = new FormData();
+  fd.append(ENTRY_USERKEY, userKey);
+  fd.append(ENTRY_DATE, date);
+  fd.append(ENTRY_IDS, idsStr);
+
+  // 送信（no-corsなので結果は読めないけど送れる）
+  try{
+    voteBtn.disabled = true;
+    voteBtn.textContent = "送信中…";
+
+    await fetch(FORM_ACTION, {
+      method: "POST",
+      mode: "no-cors",
+      body: fd
+    });
+
+    if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
+
+    alert("投票を送信しました！\n（スプレッドシートに反映されます）");
+
+    // 送信後に選択を消す（不要ならコメントアウトOK）
+    clearAll();
+  }catch(err){
+    console.error(err);
+    alert("送信に失敗しました。\nネット接続やブラウザ設定を確認してください。");
+  }finally{
+    // ボタン表示は updateAll() が整えるが、念のため
+    updateAll();
+  }
+}
+
 // ==== 更新 ====
 function updateAll(){
   countEl.textContent = String(selected.length);
@@ -640,10 +736,10 @@ clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
 });
+
+// ★ここが変更点：投票ボタンでGoogleフォーム送信
 voteBtn.addEventListener("click", () => {
-  if(selected.length !== MAX) return;
-  const names = selected.map(id => byId.get(id)?.name || id);
-  alert("投票（仮）\n\n" + names.join("\n"));
+  submitToGoogleForm();
 });
 
 // 初期描画
