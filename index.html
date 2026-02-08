@@ -1029,7 +1029,7 @@ top.forEach((x, i) => {
 
   const person = byId.get(x.id);
   const imgUrl = person ? person.img : "";
-  const dispName = person ? person.name : x.id;
+  const dispName = person ? person.name.split("(")[0] : x.id;
 
   tr.innerHTML = `
     <td class="rankNum">${shownRank}</td>
