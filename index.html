@@ -110,59 +110,71 @@
     }
     .sub{color:var(--sub);font-size:12px}
 
-    /* ===== 下：2列グリッド ===== */
+    /* ===== 下：2列グリッド（スクショ寄せ） ===== */
     .grid{
       margin-top:10px;
       display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap:10px;
+      gap:14px;
     }
     .card{
+      position: relative;
       border:1px solid var(--bd);
-      border-radius:16px;
-      padding:10px;
+      border-radius:18px;
+      padding:12px;
       background:#fff;
       display:flex;
+      flex-direction:column; /* 縦並び */
       gap:10px;
-      align-items:center;
-      min-height:72px;
     }
     .avatar{
-      width:54px;height:54px;
+      width:100%;
+      aspect-ratio: 4 / 5;  /* 縦長 */
+      height:auto;
       border-radius:16px;
       overflow:hidden;
-      flex:0 0 auto;
       background:#f2f2f2;
+      position:relative;
     }
-    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-    .info{min-width:0}
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* profileボタン（写真右上） */
+    .profileBtn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:2px solid rgba(100,150,255,.35);
+      background:rgba(255,255,255,.85);
+      color:#2f6fe8;
+      font-weight:900;
+      font-size:12px;
+      text-decoration:none;
+      backdrop-filter: blur(6px);
+    }
+
+    .info{min-width:0;text-align:center}
     .name{
       font-weight:900;
-      font-size:13px;
-      line-height:1.2;
+      font-size:14px;
+      line-height:1.25;
       word-break:break-word;
     }
-    .meta{font-size:12px;color:var(--sub);margin-top:2px}
-    .pick{
-      margin-left:auto;
-      width:22px;height:22px;
-      border-radius:6px;
-      border:1px solid #cfcfcf;
-      display:grid;
-      place-items:center;
-      font-weight:900;
-      flex:0 0 auto;
-    }
-    .picked .pick{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
+    .meta{font-size:12px;color:var(--sub);margin-top:4px}
+
+    /* +/✓ を使わない */
+    .pick{display:none !important;}
     .picked{
       outline:2px solid rgba(0,0,0,.08);
     }
 
-    /* 画面が狭い時でも2列維持しつつ見やすく */
+    /* 画面が狭い時は1列 */
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
     }
@@ -352,18 +364,38 @@ let selected = [];              // 選択順を保持（undo用）
 let selectedSet = new Set();    // 高速判定
 let lastActionStack = [];       // undo用（idを積む）
 
-// 合体データ
-const trainees = traineesOnly.map(x => ({...x, group:"trainee"}));
-const candis   = candidates.map(x => ({...x, group:"candidate"}));
+// ==== 検索強化（英字/記号/全角半角）====
+function normalizeText(s){
+  return (s || "")
+    .toString()
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s\.\-_/()（）]/g,""); // 記号を無視（S.AYUMU → sayumu）
+}
+function buildSearchKey(t){
+  // name（日本語＋括弧英字）と id を検索対象に
+  return [t.name || "", t.id || ""].map(normalizeText).join(" ");
+}
+
+// 合体データ（searchKey 付き）
+const trainees = traineesOnly.map(x => {
+  const obj = {...x, group:"trainee"};
+  obj.searchKey = buildSearchKey(obj);
+  return obj;
+});
+const candis   = candidates.map(x => {
+  const obj = {...x, group:"candidate"};
+  obj.searchKey = buildSearchKey(obj);
+  return obj;
+});
 
 // ID参照
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
-// ==== scroll位置保持（「勝手に上に戻らない」対策の決定版）====
+// ==== scroll位置保持（「勝手に上に戻らない」対策）====
 function preserveScroll(fn){
   const y = window.scrollY;
   fn();
-  // 次の描画後に戻す（体感のズレ防止）
   requestAnimationFrame(() => window.scrollTo(0, y));
 }
 
@@ -371,7 +403,6 @@ function preserveScroll(fn){
 function currentList(){
   return showCandidates ? candis : trainees;
 }
-
 function setModeUI(){
   modePill.textContent = showCandidates ? "表示：練習生候補" : "表示：練習生";
   toggleBtn.textContent = showCandidates ? "練習生を表示" : "練習生候補を表示";
@@ -406,14 +437,22 @@ slotsEl.addEventListener("click", (e) => {
 });
 
 // ==== 一覧（2列） ====
-// ※「選んだ瞬間に上へ戻る」原因は “全部再描画” が多いこと。
-// とはいえフィルタやモード切替では再描画が必要なので
-// preserveScroll() でスクロール位置を完全保持します。
 function renderGrid(){
-  const q = searchEl.value.trim().toLowerCase();
+  const qRaw = searchEl.value.trim();
+  const q = normalizeText(qRaw);
+
   const list = currentList().filter(t => {
     if(!q) return true;
-    return (t.name || "").toLowerCase().includes(q) || (t.id || "").toLowerCase().includes(q);
+
+    // 生文字（日本語）検索も通す
+    const rawHit =
+      (t.name || "").toLowerCase().includes(qRaw.toLowerCase()) ||
+      (t.id || "").toLowerCase().includes(qRaw.toLowerCase());
+
+    // 英字強化（記号無視）検索
+    const keyHit = (t.searchKey || "").includes(q);
+
+    return rawHit || keyHit;
   });
 
   resultCountEl.textContent = `${list.length}件`;
@@ -424,20 +463,30 @@ function renderGrid(){
     const card = document.createElement("div");
     card.className = "card" + (picked ? " picked" : "");
     card.setAttribute("data-id", t.id);
+
     card.innerHTML = `
-      <div class="avatar"><img src="${t.img}" alt=""></div>
+      <div class="avatar">
+        <img src="${t.img}" alt="">
+        <a class="profileBtn"
+           href="https://produce101.jp/profile/detail/?id=${encodeURIComponent(t.id)}"
+           target="_blank" rel="noopener noreferrer"
+           data-profile-link="1">profile</a>
+      </div>
+
       <div class="info">
         <div class="name">${t.name}</div>
         <div class="meta">${showCandidates ? "練習生候補" : "練習生"}</div>
       </div>
-      <div class="pick">${picked ? "✓" : "+"}</div>
     `;
+
     gridEl.appendChild(card);
   }
 }
 
-// card click add/remove
+// card click add/remove（profileを押した時は選択しない）
 gridEl.addEventListener("click", (e) => {
+  if (e.target.closest('[data-profile-link="1"]')) return;
+
   const card = e.target.closest(".card");
   if(!card) return;
   const id = card.getAttribute("data-id");
@@ -464,7 +513,6 @@ function addSelected(id){
   lastActionStack.push({type:"add", id});
   updateAll();
 }
-
 function removeSelected(id){
   if(!selectedSet.has(id)) return;
   selected = selected.filter(x => x !== id);
@@ -472,17 +520,13 @@ function removeSelected(id){
   lastActionStack.push({type:"remove", id});
   updateAll();
 }
-
 function undo(){
-  // 直近の「操作」を戻す：addなら削除、removeなら追加
   const last = lastActionStack.pop();
   if(!last) return;
   if(last.type === "add"){
-    // 追加を戻す＝削除
     selected = selected.filter(x => x !== last.id);
     selectedSet.delete(last.id);
   } else {
-    // 削除を戻す＝追加（末尾に戻す）
     if(selected.length < MAX && !selectedSet.has(last.id)){
       selected.push(last.id);
       selectedSet.add(last.id);
@@ -490,7 +534,6 @@ function undo(){
   }
   updateAll();
 }
-
 function clearAll(){
   selected = [];
   selectedSet.clear();
@@ -505,8 +548,6 @@ function updateAll(){
   voteBtn.textContent = (selected.length === MAX) ? "投票する" : `あと ${MAX - selected.length} 人`;
 
   renderSlots();
-  // 一覧は “必要最小限” で更新したいが、いまは簡潔優先で再描画
-  // スクロールは preserveScroll() で守られる
   renderGrid();
 }
 
@@ -533,7 +574,7 @@ clearBtn.addEventListener("click", () => {
 
 voteBtn.addEventListener("click", () => {
   if(selected.length !== MAX) return;
-  // ここに「投票送信」を後で合体できる
+  // ここに「投票送信（集計）」を後で合体できる
   const names = selected.map(id => byId.get(id)?.name || id);
   alert("投票（仮）\n\n" + names.join("\n"));
 });
@@ -542,7 +583,7 @@ voteBtn.addEventListener("click", () => {
 setModeUI();
 renderSlots();
 renderGrid();
-updateAll(); // count等を整える
+updateAll();
 </script>
 </body>
 </html>
