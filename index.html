@@ -165,11 +165,22 @@
       font-weight:900;
     }
     .controlsRow{
-      margin-top:10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* ←この下に追加するだけ */
+.stickyControls{
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(6px);
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
     .controlsRow input[type="text"]{
       flex: 1;
       min-width: 0;
