@@ -1,147 +1,429 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PRODUCE101非公式ファン投票サイト</title>
-<style>
-  body { font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f6f6f6; margin:0; }
-  header { background:#fff; padding:12px; text-align:center; font-weight:900; font-size:20px; border-bottom:1px solid #ccc; position:sticky; top:0; z-index:10; }
-  main { max-width:600px; margin:0 auto; padding:12px; }
-  .membersGrid { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
-  .memberCard { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.08); text-align:center; padding:10px; cursor:pointer; transition:0.2s; }
-  .memberCard.selected { opacity:0.4; }
-  .memberCard img { width:100%; border-radius:12px; object-fit:cover; height:120px; }
-  .memberCardName { font-weight:900; margin-top:6px; font-size:14px; }
-  .profileBtn { margin-top:4px; font-size:12px; font-weight:900; color:#0080ff; text-decoration:none; display:inline-block; padding:4px 8px; border:1px solid #0080ff; border-radius:8px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>投票（11人）</title>
+  <style>
+    :root{
+      --bd:#e6e6e6;
+      --bg:#fafafa;
+      --txt:#111;
+      --sub:#666;
+      --pill:#f2f2f2;
+    }
+    body{
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 16px;
+      color: var(--txt);
+      background: #fff;
+    }
+    h1{font-size:18px;margin:0 0 10px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{background:var(--pill);padding:6px 10px;border-radius:999px;font-size:12px}
+    .btn{
+      padding:10px 12px;border:1px solid var(--bd);
+      border-radius:12px;background:#fff;font-weight:800;cursor:pointer;
+    }
+    .btn.primary{background:#111;color:#fff;border-color:#111}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    input[type="text"]{
+      padding:10px 12px;border:1px solid var(--bd);
+      border-radius:12px;min-width:180px;flex:1;
+    }
+
+    /* ===== 上：選択11人 ===== */
+    .selectedWrap{
+      border:1px solid var(--bd);
+      border-radius:16px;
+      padding:12px;
+      background: var(--bg);
+    }
+    .selectedTitle{
+      font-weight:900;
+      font-size:13px;
+      margin:0 0 8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .selectedCount{font-weight:900}
+    .slots{
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding-bottom:6px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .slot{
+      flex:0 0 auto;
+      width:54px;height:54px;
+      border-radius:16px;
+      border:2px dashed #cfcfcf;
+      background:#fff;
+      display:grid;
+      place-items:center;
+      color:#9a9a9a;
+      font-weight:900;
+      position:relative;
+    }
+    .slot.filled{
+      border-style:solid;
+      border-color:#dcdcdc;
+      padding:0;
+      overflow:hidden;
+    }
+    .slot img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      background:#f2f2f2;
+    }
+    .slot .x{
+      position:absolute;
+      top:-8px; right:-8px;
+      width:24px;height:24px;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      cursor:pointer;
+      border:2px solid #fff;
+    }
+
+    /* ===== 中：一覧ラベル ===== */
+    .listHeader{
+      margin-top:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .listHeader h2{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+    }
+    .sub{color:var(--sub);font-size:12px}
+
+    /* ===== 下：2列グリッド ===== */
+    .grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    .card{
+      border:1px solid var(--bd);
+      border-radius:16px;
+      padding:10px;
+      background:#fff;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-height:72px;
+    }
+    .avatar{
+      width:54px;height:54px;
+      border-radius:16px;
+      overflow:hidden;
+      flex:0 0 auto;
+      background:#f2f2f2;
+    }
+    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+    .info{min-width:0}
+    .name{
+      font-weight:900;
+      font-size:13px;
+      line-height:1.2;
+      word-break:break-word;
+    }
+    .meta{font-size:12px;color:var(--sub);margin-top:2px}
+    .pick{
+      margin-left:auto;
+      width:22px;height:22px;
+      border-radius:6px;
+      border:1px solid #cfcfcf;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+    .picked .pick{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .picked{
+      outline:2px solid rgba(0,0,0,.08);
+    }
+
+    /* 画面が狭い時でも2列維持しつつ見やすく */
+    @media (max-width: 340px){
+      .grid{grid-template-columns: 1fr;}
+    }
+  </style>
 </head>
+
 <body>
-<header>日プ新世界 推し投票メーカー</header>
-<main>
-  <div class="membersGrid" id="membersGrid"></div>
-</main>
+  <h1>投票（1回で11人選択）</h1>
+
+  <div class="row" style="margin: 8px 0 12px;">
+    <button id="toggleBtn" class="btn">練習生候補を表示</button>
+    <input id="search" type="text" placeholder="Search（名前/英字/ID）">
+    <span class="pill" id="modePill">表示：練習生</span>
+  </div>
+
+  <div class="selectedWrap">
+    <div class="selectedTitle">
+      <span>選択中</span>
+      <span class="selectedCount"><span id="count">0</span>/11</span>
+    </div>
+    <div class="slots" id="slots"></div>
+
+    <div class="row" style="margin-top:10px;">
+      <button id="clearBtn" class="btn">リセット</button>
+      <button id="undoBtn" class="btn">1人戻す</button>
+      <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
+    </div>
+    <div class="sub" style="margin-top:6px;">
+      ※上の顔をタップで削除できます
+    </div>
+  </div>
+
+  <div class="listHeader">
+    <h2>一覧（押して追加）</h2>
+    <span class="sub" id="resultCount"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
 
 <script>
-const MAX_VOTE = 11;
-let selected = [];
-
-const trainees = [
-  // 練習生（全員20+候補10以外も含めた完全版）
-  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
-  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
-  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
-  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", id:"archeruy"},
-  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", id:"shinogayaayumu"},
-  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", id:"kobayashichisato"},
-  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", id:"katodaiki"},
-  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", id:"kwakdongmin"},
-  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", id:"suekawaeita"},
-  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", id:"horieito"},
-  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", id:"kanedaeito"},
-  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", id:"sakuraifuma"},
-  {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", id:"ogasawaragiuseppekei"},
-  {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", id:"kurahashigoten"},
-  {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", id:"horiohijiri"},
-  {name:"瑞慶覧 太都(HIROTO)", img:"https://i.imgur.com/siOPGIr.png", id:"zukeranhiroto"},
-  {name:"ユ・ヒョンスン(HYEONSEUNG)", img:"https://i.imgur.com/lY3lXLj.png", id:"yoohyeonseung"},
-  {name:"岡田 彪吾(HYUGO)", img:"https://i.imgur.com/zalwc1W.png", id:"okadahyugo"},
-  {name:"柳谷 伊冴(ISSA)", img:"https://i.imgur.com/gboCNWu.png", id:"yanagiyaissa"},
-  {name:"ユン・ジェヨン(JAEYONG)", img:"https://i.imgur.com/1yCImxd.png", id:"yoonjaeyong"},
-  {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", id:"chuangjay"},
-  {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", id:"maruojinichiro"},
-  {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", id:"kawabejoe"},
-  {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", id:"shinjunguk"},
-  {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", id:"kaneyasujunsei"},
-  {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", id:"unokaimu"},
-  {name:"多比 奏聖(KANADE)", img:"https://i.imgur.com/rdSJ6QX.png", id:"tabikanade"},
-  {name:"横山 奏夢(KANAME)", img:"https://i.imgur.com/0brlEw8.png", id:"yokoyamakaname"},
-  {name:"関 敬次郎(KEIJIRO)", img:"https://i.imgur.com/PHlkDUt.png", id:"sekikeijiro"},
-  {name:"髙松 敬祐(KEISUKE)", img:"https://i.imgur.com/bs4vfiF.png", id:"takamatsukeisuke"},
-  {name:"小野 慶人(KEITO)", img:"https://i.imgur.com/glfmRJE.png", id:"onokeito"},
-  {name:"西山 賢人(KENTO)", img:"https://i.imgur.com/izEXoBY.png", id:"nishiyamakento"},
-  {name:"河合 晃誠(KOSEI)", img:"https://i.imgur.com/E30eGfr.png", id:"kawaikosei"},
-  {name:"照井 康祐(KOSUKE)", img:"https://i.imgur.com/oDkwdFn.png", id:"teruikosuke"},
-  {name:"浅香 孝太郎(KOTARO)", img:"https://i.imgur.com/7eJxl8o.png", id:"asakakotaro"},
-  {name:"髙谷 京平(KYOHEI)", img:"https://i.imgur.com/CLU1cPO.png", id:"takayakyohei"},
-  {name:"田中 蒔(MAKI)", img:"https://i.imgur.com/No6Nybr.png", id:"tanakamaki"},
-  {name:"山根 武蔵(MUSASHI)", img:"https://i.imgur.com/Ou2XuDa.png", id:"yamanemusashi"},
-  {name:"土田 央修(OSUKE)", img:"https://i.imgur.com/Xs0WjIn.png", id:"tsuchidaosuke"},
-  {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", id:"horinoren"},
-  {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", id:"koshimizuren"},
-  {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", id:"chenrickey"},
-  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", id:"kamimotoriku"},
-  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", id:"hatobarikuto"},
-  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", id:"imaerikuto"},
-  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png", id:"kairikuya"},
-  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png", id:"ohserinto"},
-  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
-  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
-  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
-  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", id:"okadoryuga"},
-  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
-  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
-  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
-  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png", id:"ohshinhaeng"},
-  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png", id:"iwakishinji"},
-  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png", id:"miyazakishinsuke"},
-  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png", id:"nishizakishu"},
-  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", id:"yamashitashu"},
-  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", id:"parksiyoung"},
-  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", id:"satosora"},
-  {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", id:"tonosota"},
-  {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", id:"fujimakitaiga"},
-  {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", id:"matsudataiga"},
-  {name:"金倉 拓未(TAKUMI)", img:"https://i.imgur.com/O3gluG7.png", id:"kanakuratakumi"},
-  {name:"熊部 拓斗(K.TAKUTO)", img:"https://i.imgur.com/NaQURc7.png", id:"kumabetakuto"},
-  {name:"宮里 拓利(M.TAKUTO)", img:"https://i.imgur.com/5B8NMyF.png", id:"miyazatotakuto"},
-  {name:"南平 達矢(TATSUYA)", img:"https://i.imgur.com/jHnmGTs.png", id:"minamihiratatsuya"},
-  {name:"森井 輝(TERU)", img:"https://i.imgur.com/SAo1Rs4.png", id:"moriiteru"},
-  {name:"北林 天虎(TETORA)", img:"https://i.imgur.com/2gCwqHF.png", id:"kitabayashitetora"},
-  {name:"藤芳 辰弥(TOKIYA)", img:"https://i.imgur.com/9prpjvI.png", id:"fujiyoshitokiya"},
-  {name:"増田 倫希(TOMOKI)", img:"https://i.imgur.com/4JSh3HD.png", id:"masudatomoki"},
-  {name:"濱田 永遠(TOWA)", img:"https://i.imgur.com/Yap9beM.png", id:"hamadatowa"},
-  {name:"アギナルド・トリスタン・ジェームス(TRISTAN)", img:"https://i.imgur.com/wyeHbRo.png", id:"aguinaldotristanjames"},
-  {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", id:"liweize"},
-  {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", id:"yohanemmanuel"},
-  {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", id:"yadayoshiki"},
-  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
-  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
-  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
-  {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", id:"obayashiyusei"},
-  {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
-  {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"},
+/* ====== あなたのデータをここにそのまま貼る ====== */
+const traineesOnly = [
+  // ← あなたが貼った121人のうち「練習生」配列をそのまま
 ];
 
-const membersGrid = document.getElementById("membersGrid");
+const candidates = [
+  // ← あなたが貼った「練習生候補」配列をそのまま
+];
+/* ====== ここまで ====== */
 
-function renderMembers(){
-  membersGrid.innerHTML = "";
-  trainees.forEach((m,i)=>{
-    const card = document.createElement("div");
-    card.className = "memberCard" + (selected.includes(i) ? " selected" : "");
-    card.innerHTML = `
-      <img src="${m.img}" alt="${m.name}">
-      <div class="memberCardName">${m.name}</div>
-      <a class="profileBtn" href="https://produce101.jp/profile/detail/?id=${encodeURIComponent(m.id)}" target="_blank" rel="noopener">Profile</a>
-    `;
-    card.addEventListener("click", ()=>{
-      if(selected.includes(i)){
-        selected = selected.filter(n=>n!==i);
-      }else{
-        if(selected.length >= MAX_VOTE){
-          alert("投票は" + MAX_VOTE + "人までです！");
-          return;
-        }
-        selected.push(i);
-      }
-      renderMembers();
-    });
-    membersGrid.appendChild(card);
-  });
+const MAX = 11;
+
+// UI elements
+const toggleBtn = document.getElementById("toggleBtn");
+const modePill  = document.getElementById("modePill");
+const searchEl  = document.getElementById("search");
+const gridEl    = document.getElementById("grid");
+const slotsEl   = document.getElementById("slots");
+const countEl   = document.getElementById("count");
+const voteBtn   = document.getElementById("voteBtn");
+const clearBtn  = document.getElementById("clearBtn");
+const undoBtn   = document.getElementById("undoBtn");
+const resultCountEl = document.getElementById("resultCount");
+
+// state
+let showCandidates = false;     // URL触った時は練習生 = false
+let selected = [];              // 選択順を保持（undo用）
+let selectedSet = new Set();    // 高速判定
+let lastActionStack = [];       // undo用（idを積む）
+
+// 合体データ
+const trainees = traineesOnly.map(x => ({...x, group:"trainee"}));
+const candis   = candidates.map(x => ({...x, group:"candidate"}));
+
+// ID参照
+const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
+
+// ==== scroll位置保持（「勝手に上に戻らない」対策の決定版）====
+function preserveScroll(fn){
+  const y = window.scrollY;
+  fn();
+  // 次の描画後に戻す（体感のズレ防止）
+  requestAnimationFrame(() => window.scrollTo(0, y));
 }
 
-renderMembers();
+// ==== 表示モード ====
+function currentList(){
+  return showCandidates ? candis : trainees;
+}
+
+function setModeUI(){
+  modePill.textContent = showCandidates ? "表示：練習生候補" : "表示：練習生";
+  toggleBtn.textContent = showCandidates ? "練習生を表示" : "練習生候補を表示";
+}
+
+// ==== 上の11枠 ====
+function renderSlots(){
+  slotsEl.innerHTML = "";
+  for(let i=0;i<MAX;i++){
+    const id = selected[i];
+    const slot = document.createElement("div");
+    slot.className = "slot" + (id ? " filled" : "");
+    if(id){
+      const t = byId.get(id);
+      slot.innerHTML = `
+        <img src="${t?.img || ""}" alt="">
+        <div class="x" data-remove="${id}">×</div>
+      `;
+    } else {
+      slot.textContent = "+";
+    }
+    slotsEl.appendChild(slot);
+  }
+}
+
+// slot remove (tap ×)
+slotsEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-remove]");
+  if(!btn) return;
+  const id = btn.getAttribute("data-remove");
+  removeSelected(id);
+});
+
+// ==== 一覧（2列） ====
+// ※「選んだ瞬間に上へ戻る」原因は “全部再描画” が多いこと。
+// とはいえフィルタやモード切替では再描画が必要なので
+// preserveScroll() でスクロール位置を完全保持します。
+function renderGrid(){
+  const q = searchEl.value.trim().toLowerCase();
+  const list = currentList().filter(t => {
+    if(!q) return true;
+    return (t.name || "").toLowerCase().includes(q) || (t.id || "").toLowerCase().includes(q);
+  });
+
+  resultCountEl.textContent = `${list.length}件`;
+
+  gridEl.innerHTML = "";
+  for(const t of list){
+    const picked = selectedSet.has(t.id);
+    const card = document.createElement("div");
+    card.className = "card" + (picked ? " picked" : "");
+    card.setAttribute("data-id", t.id);
+    card.innerHTML = `
+      <div class="avatar"><img src="${t.img}" alt=""></div>
+      <div class="info">
+        <div class="name">${t.name}</div>
+        <div class="meta">${showCandidates ? "練習生候補" : "練習生"}</div>
+      </div>
+      <div class="pick">${picked ? "✓" : "+"}</div>
+    `;
+    gridEl.appendChild(card);
+  }
+}
+
+// card click add/remove
+gridEl.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if(!card) return;
+  const id = card.getAttribute("data-id");
+  if(!id) return;
+
+  preserveScroll(() => {
+    if(selectedSet.has(id)){
+      removeSelected(id);
+    }else{
+      addSelected(id);
+    }
+  });
+});
+
+// ==== 選択処理 ====
+function addSelected(id){
+  if(selectedSet.has(id)) return;
+  if(selected.length >= MAX){
+    alert(`最大${MAX}人までです`);
+    return;
+  }
+  selected.push(id);
+  selectedSet.add(id);
+  lastActionStack.push({type:"add", id});
+  updateAll();
+}
+
+function removeSelected(id){
+  if(!selectedSet.has(id)) return;
+  selected = selected.filter(x => x !== id);
+  selectedSet.delete(id);
+  lastActionStack.push({type:"remove", id});
+  updateAll();
+}
+
+function undo(){
+  // 直近の「操作」を戻す：addなら削除、removeなら追加
+  const last = lastActionStack.pop();
+  if(!last) return;
+  if(last.type === "add"){
+    // 追加を戻す＝削除
+    selected = selected.filter(x => x !== last.id);
+    selectedSet.delete(last.id);
+  } else {
+    // 削除を戻す＝追加（末尾に戻す）
+    if(selected.length < MAX && !selectedSet.has(last.id)){
+      selected.push(last.id);
+      selectedSet.add(last.id);
+    }
+  }
+  updateAll();
+}
+
+function clearAll(){
+  selected = [];
+  selectedSet.clear();
+  lastActionStack = [];
+  updateAll();
+}
+
+// ==== 更新 ====
+function updateAll(){
+  countEl.textContent = String(selected.length);
+  voteBtn.disabled = selected.length !== MAX;
+  voteBtn.textContent = (selected.length === MAX) ? "投票する" : `あと ${MAX - selected.length} 人`;
+
+  renderSlots();
+  // 一覧は “必要最小限” で更新したいが、いまは簡潔優先で再描画
+  // スクロールは preserveScroll() で守られる
+  renderGrid();
+}
+
+// ==== モード切替（ボタン1つでトグル） ====
+toggleBtn.addEventListener("click", () => {
+  preserveScroll(() => {
+    showCandidates = !showCandidates;
+    setModeUI();
+    renderGrid();
+  });
+});
+
+// ==== 検索 ====
+searchEl.addEventListener("input", () => {
+  preserveScroll(() => renderGrid());
+});
+
+// ==== ボタン ====
+undoBtn.addEventListener("click", () => preserveScroll(() => undo()));
+clearBtn.addEventListener("click", () => {
+  if(!confirm("選択をリセットしますか？")) return;
+  preserveScroll(() => clearAll());
+});
+
+voteBtn.addEventListener("click", () => {
+  if(selected.length !== MAX) return;
+  // ここに「投票送信」を後で合体できる
+  const names = selected.map(id => byId.get(id)?.name || id);
+  alert("投票（仮）\n\n" + names.join("\n"));
+});
+
+// 初期描画
+setModeUI();
+renderSlots();
+renderGrid();
+updateAll(); // count等を整える
 </script>
 </body>
 </html>
