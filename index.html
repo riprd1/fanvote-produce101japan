@@ -303,6 +303,7 @@
       margin:0;
       font-size:14px;
       font-weight:900;
+      white-space:nowrap;
     }
     .rankMeta{
       font-size:12px;
@@ -312,18 +313,27 @@
     .rankBody{
       padding: 10px 12px 12px;
     }
+    .rankStatusRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 0 0 8px;
+    }
     .rankStatus{
       font-size:12px;
       color: var(--sub);
-      margin: 0 0 8px;
+      margin: 0;
     }
+
     .rankTable{
       width:100%;
       border-collapse: collapse;
       font-size:13px;
     }
     .rankTable th, .rankTable td{
-      padding: 8px 6px;
+      padding: 10px 6px;
       border-bottom: 1px solid #f0f0f0;
       vertical-align: middle;
     }
@@ -335,32 +345,49 @@
     }
     .rankNum{ width:44px; font-weight:900; }
     .rankVotes{
-      width:70px;
+      width:86px;
       text-align:right;
       font-variant-numeric: tabular-nums;
       font-weight:900;
+      white-space:nowrap;
     }
-    .rankId{ word-break: break-all; font-weight:700; }
-    .rankLink{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      text-decoration:none;
-      color:#2f6fe8;
-      font-weight:900;
-      font-size:12px;
-      padding:8px 10px;
-      border:1px solid rgba(47,111,232,.25);
-      border-radius:999px;
-      background: rgba(47,111,232,.06);
-    }
-    .rankActions{
+
+    /* 見出し（ID/票）を消す */
+    .rankTable thead{ display:none; }
+
+    /* ランキング行の中身（写真タップでprofile） */
+    .rankLeft{
       display:flex;
       align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      gap:10px;
+      min-width:0;
     }
+    .rankThumbLink{
+      display:inline-flex;
+      flex:0 0 auto;
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid #eee;
+      background:#f2f2f2;
+    }
+    .rankThumb{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .rankIdSub{
+      font-weight:800;
+      font-size:13px;
+      color:#111;
+      word-break:break-all;
+      line-height:1.15;
+    }
+
+    /* 集計シートを非表示 */
+    #rankOpenSheet{ display:none !important; }
   </style>
 </head>
 
@@ -396,9 +423,9 @@
           <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
         </div>
         <div class="sub" style="margin-top:6px;">
-  ※上の顔をタップで削除できます<br>
-  ※投票権は日本時間0:00にリセットされます
-</div>
+          ※上の顔をタップで削除できます<br>
+          ※投票権は日本時間0:00にリセットされます
+        </div>
       </div>
 
       <div class="listSection">
@@ -434,7 +461,11 @@
           </div>
         </div>
         <div class="rankBody">
-          <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
+          <div class="rankStatusRow">
+            <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
+            <p class="rankStatus">※写真タップでprofileが表示されます。</p>
+          </div>
+
           <div style="overflow:auto;">
             <table class="rankTable">
               <thead>
@@ -471,8 +502,8 @@ const ENTRY_DATE    = "entry.1759038206";
 const ENTRY_IDS     = "entry.1038992501";
 const BLOCK_DUPLICATE_PER_DAY = true;
 
-/* ====== 練習生データ（あなたのまま：省略せずそのまま貼ってOK） ====== */
-const traineesOnly = [/* ここはあなたの配列そのまま */ 
+/* ====== 練習生データ（あなたのまま） ====== */
+const traineesOnly = [
   {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
   {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
   {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
@@ -557,7 +588,7 @@ const traineesOnly = [/* ここはあなたの配列そのまま */
   {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
 ];
-const candidates = [/* ここはあなたの配列そのまま */ 
+const candidates = [
   {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
   {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
   {name:"市川 大輝(I.DAIKI)", img:"https://i.imgur.com/72FqxLz.png", id:"ichikawadaiki"},
@@ -598,8 +629,6 @@ const candidates = [/* ここはあなたの配列そのまま */
   {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", id:"okamotoyuto"}
 ];
 
-/* ====== ここまで ====== */
-
 const MAX = 11;
 
 // UI elements (vote)
@@ -633,7 +662,6 @@ let selectedSet = new Set();
 let lastActionStack = [];
 
 let rankTimer = null;
-let hasLoadedRankOnce = false;
 
 // ==== 検索強化 ====
 function normalizeText(s){
@@ -843,7 +871,6 @@ async function submitToGoogleForm(){
     alert("投票を送信しました！");
     clearAll();
 
-    // ランキング画面を開いてたら更新
     if(rankView.classList.contains("active")){
       fetchRankingCSV();
     }
@@ -961,12 +988,21 @@ async function fetchRankingCSV(){
     top.forEach((x, i) => {
       const tr = document.createElement("tr");
       const shownRank = (x.rank != null) ? x.rank : (i+1);
+
+      const person = byId.get(x.id);
+      const imgUrl = person ? person.img : "";
+
       tr.innerHTML = `
         <td class="rankNum">${shownRank}</td>
-        <td class="rankId">
-          <a href="${buildRankingLink(x.id)}" target="_blank" rel="noopener noreferrer">${x.id}</a>
+        <td>
+          <div class="rankLeft">
+            <a class="rankThumbLink" href="${buildRankingLink(x.id)}" target="_blank" rel="noopener noreferrer">
+              <img class="rankThumb" src="${imgUrl}" alt="" onerror="this.style.display='none'">
+            </a>
+            <div class="rankIdSub">${x.id}</div>
+          </div>
         </td>
-        <td class="rankVotes">${x.votes}</td>
+        <td class="rankVotes">${x.votes}票</td>
       `;
       frag.appendChild(tr);
     });
@@ -976,7 +1012,6 @@ async function fetchRankingCSV(){
 
     rankStatus.textContent = `上位${top.length}件を表示中（全${data.length}件）`;
     rankUpdated.textContent = `更新: ${nowTokyoTime()}`;
-    hasLoadedRankOnce = true;
   }catch(err){
     console.error(err);
     rankStatus.textContent = "ランキングの読み込みに失敗…（公開設定/URL/ネットを確認してね）";
@@ -993,7 +1028,6 @@ function showVote(){
   btnVote.classList.add("active");
   btnRank.classList.remove("active");
 
-  // ランキング自動更新停止
   if(rankTimer){ clearInterval(rankTimer); rankTimer = null; }
   window.scrollTo(0,0);
 }
@@ -1003,10 +1037,8 @@ function showRank(){
   btnRank.classList.add("active");
   btnVote.classList.remove("active");
 
-  // 開いた時に読み込む（初回 or 毎回どっちでもOK。ここは毎回にしてる）
   fetchRankingCSV();
 
-  // ランキング画面の時だけ30秒更新
   if(rankTimer){ clearInterval(rankTimer); }
   rankTimer = setInterval(fetchRankingCSV, 30000);
 
