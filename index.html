@@ -14,10 +14,25 @@
     }
     body{
       font-family: system-ui, -apple-system, sans-serif;
-      margin: 16px;
+      margin: 0;
       color: var(--txt);
       background: #fff;
     }
+
+    /* ===== 追加：ヘッダー画像 ===== */
+    .header{
+      width: 100%;
+      height: 110px;
+      background-image: url("https://i.imgur.com/wJy5Wb5.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .page{
+      padding: 16px;
+    }
+
     h1{font-size:18px;margin:0 0 10px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .pill{background:var(--pill);padding:6px 10px;border-radius:999px;font-size:12px}
@@ -50,7 +65,7 @@
     }
     .selectedCount{font-weight:900}
 
-    /* ★見やすく・×なし（タップで削除 / 長押しで並び替え） */
+    /* 見やすいサイズ・×なし・タップで削除 */
     .slots{
       display:flex;
       gap:12px;
@@ -79,6 +94,7 @@
       border-color:#dedede;
       padding:0;
       overflow:hidden;
+      cursor: pointer; /* タップで削除 */
     }
     .slot img{
       width:100%;
@@ -86,12 +102,6 @@
       object-fit:cover;
       display:block;
       background:#f2f2f2;
-    }
-    .slot.dragging{
-      opacity:.25;
-      filter: grayscale(1);
-      border-style:solid;
-      border-color:#bbb;
     }
 
     /* ===== 見出しと操作行 ===== */
@@ -140,7 +150,26 @@
       opacity:1;
     }
 
-    /* ===== 下：2列グリッド（スクショ寄せ） ===== */
+    /* ===== 追加：一覧エリア 背景画像 ===== */
+    .listSection{
+      margin-top: 14px;
+      border-radius: 18px;
+      overflow: hidden;
+      background-image: url("https://i.imgur.com/eTuwSDL.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      padding: 14px;
+      border: 1px solid var(--bd);
+    }
+    /* 文字が読みにくい場合に備えて薄い下地 */
+    .listSection .overlay{
+      background: rgba(255,255,255,.82);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    /* ===== 下：2列グリッド ===== */
     .grid{
       margin-top:10px;
       display:grid;
@@ -197,7 +226,17 @@
     }
     .meta{font-size:12px;color:var(--sub);margin-top:4px}
 
-    .picked{ outline:2px solid rgba(0,0,0,.08); }
+    /* ★修正：選択済みはグレー表示（一覧で分かりやすく） */
+    .picked{
+      opacity: .45;
+      filter: grayscale(1);
+      outline: 2px solid rgba(0,0,0,.08);
+    }
+    /* profileは押せる＆見えやすい */
+    .picked .profileBtn{
+      opacity: 1;
+      filter: none;
+    }
 
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
@@ -206,40 +245,49 @@
 </head>
 
 <body>
-  <h1>投票（1回で11人選択）</h1>
+  <!-- ヘッダー画像 -->
+  <div class="header"></div>
 
-  <div class="selectedWrap">
-    <div class="selectedTitle">
-      <span>選択中</span>
-      <span class="selectedCount"><span id="count">0</span>/11</span>
-    </div>
-    <div class="slots" id="slots"></div>
+  <div class="page">
+    <h1>投票（1回で11人選択）</h1>
 
-    <div class="row" style="margin-top:10px;">
-      <button id="clearBtn" class="btn">リセット</button>
-      <button id="undoBtn" class="btn">1人戻す</button>
-      <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
+    <div class="selectedWrap">
+      <div class="selectedTitle">
+        <span>選択中</span>
+        <span class="selectedCount"><span id="count">0</span>/11</span>
+      </div>
+      <div class="slots" id="slots"></div>
+
+      <div class="row" style="margin-top:10px;">
+        <button id="clearBtn" class="btn">リセット</button>
+        <button id="undoBtn" class="btn">1人戻す</button>
+        <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
+      </div>
+      <div class="sub" style="margin-top:6px;">
+        ※上の顔をタップで削除できます
+      </div>
     </div>
-    <div class="sub" style="margin-top:6px;">
-      ※上の顔をタップで削除できます（長押しで並び替え）
+
+    <!-- 一覧エリア（背景画像つき） -->
+    <div class="listSection">
+      <div class="overlay">
+        <div class="listHeader">
+          <h2>一覧（押して追加）</h2>
+          <span class="sub" id="resultCount"></span>
+        </div>
+
+        <div class="controlsRow">
+          <input id="search" type="text" placeholder="Search（名前/英字/ID）">
+          <button id="toggleBtn" class="togglePill on" type="button">
+            <span class="dot"></span>
+            <span id="modeText">練習生</span>
+          </button>
+        </div>
+
+        <div class="grid" id="grid"></div>
+      </div>
     </div>
   </div>
-
-  <div class="listHeader">
-    <h2>一覧（押して追加）</h2>
-    <span class="sub" id="resultCount"></span>
-  </div>
-
-  <!-- Search + トグル（練習生⇄候補） -->
-  <div class="controlsRow">
-    <input id="search" type="text" placeholder="Search（名前/英字/ID）">
-    <button id="toggleBtn" class="togglePill on" type="button">
-      <span class="dot"></span>
-      <span id="modeText">練習生</span>
-    </button>
-  </div>
-
-  <div class="grid" id="grid"></div>
 
 <script>
 
@@ -434,7 +482,7 @@ function setModeUI(){
   toggleBtn.classList.toggle("on", !showCandidates);
 }
 
-// ==== 上の11枠（×なし：タップで削除 / 長押しで並び替え） ====
+// ==== 上の11枠（×なし：タップで削除） ====
 function renderSlots(){
   slotsEl.innerHTML = "";
   for(let i=0;i<MAX;i++){
@@ -447,7 +495,7 @@ function renderSlots(){
     if(id){
       const t = byId.get(id);
       slot.innerHTML = `<img src="${t?.img || ""}" alt="">`;
-      slot.title = "タップで削除 / 長押しで並び替え";
+      slot.title = "タップで削除";
     } else {
       slot.textContent = "+";
     }
@@ -455,140 +503,14 @@ function renderSlots(){
   }
 }
 
-// ====== タップで削除 / 長押しドラッグで並び替え ======
-let pressTimer = null;
-let isDragging = false;
-let dragId = null;
-let ghost = null;
-let pointerIdActive = null;
-let downX = 0, downY = 0;
-
-function moveItem(arr, from, to){
-  if(from === to) return;
-  const item = arr.splice(from, 1)[0];
-  arr.splice(to, 0, item);
-}
-
-function makeGhost(slotEl){
-  const rect = slotEl.getBoundingClientRect();
-  const g = slotEl.cloneNode(true);
-  g.style.position = "fixed";
-  g.style.left = rect.left + "px";
-  g.style.top  = rect.top  + "px";
-  g.style.width  = rect.width + "px";
-  g.style.height = rect.height + "px";
-  g.style.zIndex = 9999;
-  g.style.pointerEvents = "none";
-  g.style.boxShadow = "0 10px 24px rgba(0,0,0,.18)";
-  g.style.borderStyle = "solid";
-  g.style.borderColor = "#111";
-  g.style.background = "#fff";
-  g.style.borderRadius = "18px";
-  document.body.appendChild(g);
-  return g;
-}
-
-function getSlotIndexFromPoint(clientX){
-  const slots = Array.from(slotsEl.querySelectorAll(".slot"));
-  let bestIdx = 0;
-  let bestDist = Infinity;
-  for(const el of slots){
-    const r = el.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const dist = Math.abs(clientX - cx);
-    const idx = Number(el.getAttribute("data-index"));
-    if(dist < bestDist){
-      bestDist = dist;
-      bestIdx = idx;
-    }
-  }
-  return bestIdx;
-}
-
-slotsEl.addEventListener("pointerdown", (e) => {
+// 上の枠：タップで削除
+slotsEl.addEventListener("click", (e) => {
   const slot = e.target.closest(".slot.filled");
   if(!slot) return;
-
-  pointerIdActive = e.pointerId;
-  slotsEl.setPointerCapture(pointerIdActive);
-
-  dragId = slot.getAttribute("data-id");
-
-  downX = e.clientX;
-  downY = e.clientY;
-
-  // 長押しでドラッグ開始（300ms）
-  pressTimer = setTimeout(() => {
-    isDragging = true;
-    ghost = makeGhost(slot);
-    slot.classList.add("dragging");
-  }, 300);
+  const id = slot.getAttribute("data-id");
+  if(!id) return;
+  removeSelected(id);
 });
-
-slotsEl.addEventListener("pointermove", (e) => {
-  if(pointerIdActive !== e.pointerId) return;
-
-  const dx = Math.abs(e.clientX - downX);
-  const dy = Math.abs(e.clientY - downY);
-
-  // 長押し前に大きく動いたらキャンセル（横スクロール優先）
-  if(!isDragging && pressTimer && (dx > 10 || dy > 10)){
-    clearTimeout(pressTimer);
-    pressTimer = null;
-    return;
-  }
-
-  if(!isDragging || !ghost) return;
-
-  ghost.style.left = (e.clientX - ghost.offsetWidth/2) + "px";
-  ghost.style.top  = (e.clientY - ghost.offsetHeight/2) + "px";
-
-  const toIndex = getSlotIndexFromPoint(e.clientX);
-  const fromIndex = selected.indexOf(dragId);
-
-  if(fromIndex !== -1 && toIndex !== fromIndex){
-    moveItem(selected, fromIndex, toIndex);
-
-    // ここでは slots だけ軽く更新（一覧は更新しない）
-    renderSlots();
-    const now = slotsEl.querySelector(`.slot.filled[data-id="${CSS.escape(dragId)}"]`);
-    if(now) now.classList.add("dragging");
-  }
-});
-
-function endPointer(e){
-  if(pointerIdActive !== e.pointerId) return;
-
-  if(pressTimer){
-    clearTimeout(pressTimer);
-    pressTimer = null;
-  }
-
-  if(isDragging){
-    isDragging = false;
-    if(ghost){
-      ghost.remove();
-      ghost = null;
-    }
-    slotsEl.querySelectorAll(".slot.dragging").forEach(el => el.classList.remove("dragging"));
-
-    // 並び替え後：上とボタン表示だけ更新（一覧はそのまま）
-    updateTopOnly();
-  } else {
-    // タップ：削除
-    const slot = e.target.closest(".slot.filled");
-    if(slot){
-      const id = slot.getAttribute("data-id");
-      removeSelected(id);
-    }
-  }
-
-  pointerIdActive = null;
-  dragId = null;
-}
-
-slotsEl.addEventListener("pointerup", endPointer);
-slotsEl.addEventListener("pointercancel", endPointer);
 
 // ==== 一覧（2列） ====
 function renderGrid(){
@@ -634,7 +556,7 @@ function renderGrid(){
   }
 }
 
-// card click add/remove（profileは除外）
+// 一覧：カード押しで追加/解除（profileは除外）
 gridEl.addEventListener("click", (e) => {
   if (e.target.closest('[data-profile-link="1"]')) return;
 
@@ -651,7 +573,7 @@ gridEl.addEventListener("click", (e) => {
 
 // ==== 選択処理 ====
 function addSelected(id){
-  if(selectedSet.has(id)) return;
+  if(selectedSet.has(id)) return; // 2回目追加防止
   if(selected.length >= MAX){
     alert(`最大${MAX}人までです`);
     return;
@@ -690,14 +612,11 @@ function clearAll(){
 }
 
 // ==== 更新 ====
-function updateTopOnly(){
+function updateAll(){
   countEl.textContent = String(selected.length);
   voteBtn.disabled = selected.length !== MAX;
   voteBtn.textContent = (selected.length === MAX) ? "投票する" : `あと ${MAX - selected.length} 人`;
   renderSlots();
-}
-function updateAll(){
-  updateTopOnly();
   renderGrid();
 }
 
