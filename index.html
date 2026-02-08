@@ -49,17 +49,20 @@
       gap:10px;
     }
     .selectedCount{font-weight:900}
+
+    /* ★見やすく・×なし（タップで削除 / 長押しで並び替え） */
     .slots{
       display:flex;
-      gap:10px;
+      gap:12px;
       overflow-x:auto;
-      padding-bottom:6px;
+      padding:6px 2px 10px;
       -webkit-overflow-scrolling: touch;
     }
     .slot{
       flex:0 0 auto;
-      width:54px;height:54px;
-      border-radius:16px;
+      width:74px;
+      height:74px;
+      border-radius:18px;
       border:2px dashed #cfcfcf;
       background:#fff;
       display:grid;
@@ -67,10 +70,13 @@
       color:#9a9a9a;
       font-weight:900;
       position:relative;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action: pan-x; /* 横スクロール許可 */
     }
     .slot.filled{
       border-style:solid;
-      border-color:#dcdcdc;
+      border-color:#dedede;
       padding:0;
       overflow:hidden;
     }
@@ -81,21 +87,14 @@
       display:block;
       background:#f2f2f2;
     }
-    .slot .x{
-      position:absolute;
-      top:-8px; right:-8px;
-      width:24px;height:24px;
-      border-radius:999px;
-      background:#111;
-      color:#fff;
-      display:grid;
-      place-items:center;
-      font-size:14px;
-      cursor:pointer;
-      border:2px solid #fff;
+    .slot.dragging{
+      opacity:.25;
+      filter: grayscale(1);
+      border-style:solid;
+      border-color:#bbb;
     }
 
-    /* ===== 中：一覧ラベル ===== */
+    /* ===== 見出しと操作行 ===== */
     .listHeader{
       margin-top:14px;
       display:flex;
@@ -109,6 +108,37 @@
       font-weight:900;
     }
     .sub{color:var(--sub);font-size:12px}
+
+    .controlsRow{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .controlsRow input[type="text"]{
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* トグルボタン（pill風） */
+    .togglePill{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--bd);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+      white-space:nowrap;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .togglePill .dot{
+      width:10px;height:10px;border-radius:999px;background:#111;opacity:.25;
+    }
+    .togglePill.on .dot{
+      opacity:1;
+    }
 
     /* ===== 下：2列グリッド（スクショ寄せ） ===== */
     .grid{
@@ -124,12 +154,12 @@
       padding:12px;
       background:#fff;
       display:flex;
-      flex-direction:column; /* 縦並び */
+      flex-direction:column;
       gap:10px;
     }
     .avatar{
       width:100%;
-      aspect-ratio: 4 / 5;  /* 縦長 */
+      aspect-ratio: 4 / 5;
       height:auto;
       border-radius:16px;
       overflow:hidden;
@@ -143,7 +173,6 @@
       display:block;
     }
 
-    /* profileボタン（写真右上） */
     .profileBtn{
       position:absolute;
       top:10px;
@@ -168,13 +197,8 @@
     }
     .meta{font-size:12px;color:var(--sub);margin-top:4px}
 
-    /* +/✓ を使わない */
-    .pick{display:none !important;}
-    .picked{
-      outline:2px solid rgba(0,0,0,.08);
-    }
+    .picked{ outline:2px solid rgba(0,0,0,.08); }
 
-    /* 画面が狭い時は1列 */
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
     }
@@ -183,12 +207,6 @@
 
 <body>
   <h1>投票（1回で11人選択）</h1>
-
-  <div class="row" style="margin: 8px 0 12px;">
-    <button id="toggleBtn" class="btn">練習生候補を表示</button>
-    <input id="search" type="text" placeholder="Search（名前/英字/ID）">
-    <span class="pill" id="modePill">表示：練習生</span>
-  </div>
 
   <div class="selectedWrap">
     <div class="selectedTitle">
@@ -203,7 +221,7 @@
       <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
     </div>
     <div class="sub" style="margin-top:6px;">
-      ※上の顔をタップで削除できます
+      ※上の顔をタップで削除できます（長押しで並び替え）
     </div>
   </div>
 
@@ -212,9 +230,19 @@
     <span class="sub" id="resultCount"></span>
   </div>
 
+  <!-- Search + トグル（練習生⇄候補） -->
+  <div class="controlsRow">
+    <input id="search" type="text" placeholder="Search（名前/英字/ID）">
+    <button id="toggleBtn" class="togglePill on" type="button">
+      <span class="dot"></span>
+      <span id="modeText">練習生</span>
+    </button>
+  </div>
+
   <div class="grid" id="grid"></div>
 
 <script>
+
 /* ====== 練習生データ（あなたのまま） ====== */
 const traineesOnly = [/* 省略なし：あなたが貼った内容そのまま */ 
   {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
@@ -348,7 +376,7 @@ const MAX = 11;
 
 // UI elements
 const toggleBtn = document.getElementById("toggleBtn");
-const modePill  = document.getElementById("modePill");
+const modeText  = document.getElementById("modeText");
 const searchEl  = document.getElementById("search");
 const gridEl    = document.getElementById("grid");
 const slotsEl   = document.getElementById("slots");
@@ -359,10 +387,10 @@ const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
 // state
-let showCandidates = false;     // URL触った時は練習生 = false
-let selected = [];              // 選択順を保持（undo用）
-let selectedSet = new Set();    // 高速判定
-let lastActionStack = [];       // undo用（idを積む）
+let showCandidates = false;     // 初期は練習生
+let selected = [];              // 並び順もこれで保持
+let selectedSet = new Set();
+let lastActionStack = [];
 
 // ==== 検索強化（英字/記号/全角半角）====
 function normalizeText(s){
@@ -370,29 +398,27 @@ function normalizeText(s){
     .toString()
     .normalize("NFKC")
     .toLowerCase()
-    .replace(/[\s\.\-_/()（）]/g,""); // 記号を無視（S.AYUMU → sayumu）
+    .replace(/[\s\.\-_/()（）]/g,"");
 }
 function buildSearchKey(t){
-  // name（日本語＋括弧英字）と id を検索対象に
   return [t.name || "", t.id || ""].map(normalizeText).join(" ");
 }
 
-// 合体データ（searchKey 付き）
+// 合体データ（searchKey付き）
 const trainees = traineesOnly.map(x => {
   const obj = {...x, group:"trainee"};
   obj.searchKey = buildSearchKey(obj);
   return obj;
 });
-const candis   = candidates.map(x => {
+const candis = candidates.map(x => {
   const obj = {...x, group:"candidate"};
   obj.searchKey = buildSearchKey(obj);
   return obj;
 });
 
-// ID参照
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
-// ==== scroll位置保持（「勝手に上に戻らない」対策）====
+// ==== scroll位置保持 ====
 function preserveScroll(fn){
   const y = window.scrollY;
   fn();
@@ -404,23 +430,24 @@ function currentList(){
   return showCandidates ? candis : trainees;
 }
 function setModeUI(){
-  modePill.textContent = showCandidates ? "表示：練習生候補" : "表示：練習生";
-  toggleBtn.textContent = showCandidates ? "練習生を表示" : "練習生候補を表示";
+  modeText.textContent = showCandidates ? "練習生候補" : "練習生";
+  toggleBtn.classList.toggle("on", !showCandidates);
 }
 
-// ==== 上の11枠 ====
+// ==== 上の11枠（×なし：タップで削除 / 長押しで並び替え） ====
 function renderSlots(){
   slotsEl.innerHTML = "";
   for(let i=0;i<MAX;i++){
     const id = selected[i];
     const slot = document.createElement("div");
     slot.className = "slot" + (id ? " filled" : "");
+    slot.setAttribute("data-index", String(i));
+    if(id) slot.setAttribute("data-id", id);
+
     if(id){
       const t = byId.get(id);
-      slot.innerHTML = `
-        <img src="${t?.img || ""}" alt="">
-        <div class="x" data-remove="${id}">×</div>
-      `;
+      slot.innerHTML = `<img src="${t?.img || ""}" alt="">`;
+      slot.title = "タップで削除 / 長押しで並び替え";
     } else {
       slot.textContent = "+";
     }
@@ -428,13 +455,140 @@ function renderSlots(){
   }
 }
 
-// slot remove (tap ×)
-slotsEl.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-remove]");
-  if(!btn) return;
-  const id = btn.getAttribute("data-remove");
-  removeSelected(id);
+// ====== タップで削除 / 長押しドラッグで並び替え ======
+let pressTimer = null;
+let isDragging = false;
+let dragId = null;
+let ghost = null;
+let pointerIdActive = null;
+let downX = 0, downY = 0;
+
+function moveItem(arr, from, to){
+  if(from === to) return;
+  const item = arr.splice(from, 1)[0];
+  arr.splice(to, 0, item);
+}
+
+function makeGhost(slotEl){
+  const rect = slotEl.getBoundingClientRect();
+  const g = slotEl.cloneNode(true);
+  g.style.position = "fixed";
+  g.style.left = rect.left + "px";
+  g.style.top  = rect.top  + "px";
+  g.style.width  = rect.width + "px";
+  g.style.height = rect.height + "px";
+  g.style.zIndex = 9999;
+  g.style.pointerEvents = "none";
+  g.style.boxShadow = "0 10px 24px rgba(0,0,0,.18)";
+  g.style.borderStyle = "solid";
+  g.style.borderColor = "#111";
+  g.style.background = "#fff";
+  g.style.borderRadius = "18px";
+  document.body.appendChild(g);
+  return g;
+}
+
+function getSlotIndexFromPoint(clientX){
+  const slots = Array.from(slotsEl.querySelectorAll(".slot"));
+  let bestIdx = 0;
+  let bestDist = Infinity;
+  for(const el of slots){
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const dist = Math.abs(clientX - cx);
+    const idx = Number(el.getAttribute("data-index"));
+    if(dist < bestDist){
+      bestDist = dist;
+      bestIdx = idx;
+    }
+  }
+  return bestIdx;
+}
+
+slotsEl.addEventListener("pointerdown", (e) => {
+  const slot = e.target.closest(".slot.filled");
+  if(!slot) return;
+
+  pointerIdActive = e.pointerId;
+  slotsEl.setPointerCapture(pointerIdActive);
+
+  dragId = slot.getAttribute("data-id");
+
+  downX = e.clientX;
+  downY = e.clientY;
+
+  // 長押しでドラッグ開始（300ms）
+  pressTimer = setTimeout(() => {
+    isDragging = true;
+    ghost = makeGhost(slot);
+    slot.classList.add("dragging");
+  }, 300);
 });
+
+slotsEl.addEventListener("pointermove", (e) => {
+  if(pointerIdActive !== e.pointerId) return;
+
+  const dx = Math.abs(e.clientX - downX);
+  const dy = Math.abs(e.clientY - downY);
+
+  // 長押し前に大きく動いたらキャンセル（横スクロール優先）
+  if(!isDragging && pressTimer && (dx > 10 || dy > 10)){
+    clearTimeout(pressTimer);
+    pressTimer = null;
+    return;
+  }
+
+  if(!isDragging || !ghost) return;
+
+  ghost.style.left = (e.clientX - ghost.offsetWidth/2) + "px";
+  ghost.style.top  = (e.clientY - ghost.offsetHeight/2) + "px";
+
+  const toIndex = getSlotIndexFromPoint(e.clientX);
+  const fromIndex = selected.indexOf(dragId);
+
+  if(fromIndex !== -1 && toIndex !== fromIndex){
+    moveItem(selected, fromIndex, toIndex);
+
+    // ここでは slots だけ軽く更新（一覧は更新しない）
+    renderSlots();
+    const now = slotsEl.querySelector(`.slot.filled[data-id="${CSS.escape(dragId)}"]`);
+    if(now) now.classList.add("dragging");
+  }
+});
+
+function endPointer(e){
+  if(pointerIdActive !== e.pointerId) return;
+
+  if(pressTimer){
+    clearTimeout(pressTimer);
+    pressTimer = null;
+  }
+
+  if(isDragging){
+    isDragging = false;
+    if(ghost){
+      ghost.remove();
+      ghost = null;
+    }
+    slotsEl.querySelectorAll(".slot.dragging").forEach(el => el.classList.remove("dragging"));
+
+    // 並び替え後：上とボタン表示だけ更新（一覧はそのまま）
+    updateTopOnly();
+  } else {
+    // タップ：削除
+    const slot = e.target.closest(".slot.filled");
+    if(slot){
+      const id = slot.getAttribute("data-id");
+      removeSelected(id);
+    }
+  }
+
+  pointerIdActive = null;
+  dragId = null;
+}
+
+slotsEl.addEventListener("pointerup", endPointer);
+slotsEl.addEventListener("pointercancel", endPointer);
 
 // ==== 一覧（2列） ====
 function renderGrid(){
@@ -444,12 +598,10 @@ function renderGrid(){
   const list = currentList().filter(t => {
     if(!q) return true;
 
-    // 生文字（日本語）検索も通す
     const rawHit =
       (t.name || "").toLowerCase().includes(qRaw.toLowerCase()) ||
       (t.id || "").toLowerCase().includes(qRaw.toLowerCase());
 
-    // 英字強化（記号無視）検索
     const keyHit = (t.searchKey || "").includes(q);
 
     return rawHit || keyHit;
@@ -478,12 +630,11 @@ function renderGrid(){
         <div class="meta">${showCandidates ? "練習生候補" : "練習生"}</div>
       </div>
     `;
-
     gridEl.appendChild(card);
   }
 }
 
-// card click add/remove（profileを押した時は選択しない）
+// card click add/remove（profileは除外）
 gridEl.addEventListener("click", (e) => {
   if (e.target.closest('[data-profile-link="1"]')) return;
 
@@ -493,11 +644,8 @@ gridEl.addEventListener("click", (e) => {
   if(!id) return;
 
   preserveScroll(() => {
-    if(selectedSet.has(id)){
-      removeSelected(id);
-    }else{
-      addSelected(id);
-    }
+    if(selectedSet.has(id)) removeSelected(id);
+    else addSelected(id);
   });
 });
 
@@ -542,16 +690,18 @@ function clearAll(){
 }
 
 // ==== 更新 ====
-function updateAll(){
+function updateTopOnly(){
   countEl.textContent = String(selected.length);
   voteBtn.disabled = selected.length !== MAX;
   voteBtn.textContent = (selected.length === MAX) ? "投票する" : `あと ${MAX - selected.length} 人`;
-
   renderSlots();
+}
+function updateAll(){
+  updateTopOnly();
   renderGrid();
 }
 
-// ==== モード切替（ボタン1つでトグル） ====
+// ==== トグル切替 ====
 toggleBtn.addEventListener("click", () => {
   preserveScroll(() => {
     showCandidates = !showCandidates;
@@ -571,10 +721,8 @@ clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
 });
-
 voteBtn.addEventListener("click", () => {
   if(selected.length !== MAX) return;
-  // ここに「投票送信（集計）」を後で合体できる
   const names = selected.map(id => byId.get(id)?.name || id);
   alert("投票（仮）\n\n" + names.join("\n"));
 });
