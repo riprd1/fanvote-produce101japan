@@ -303,7 +303,6 @@
       margin:0;
       font-size:14px;
       font-weight:900;
-      white-space:nowrap;
     }
     .rankMeta{
       font-size:12px;
@@ -313,18 +312,27 @@
     .rankBody{
       padding: 10px 12px 12px;
     }
+
+    /* ★ 上位◯件の行：右側に注記を出す */
     .rankStatusRow{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      flex-wrap:wrap;
       margin: 0 0 8px;
     }
     .rankStatus{
       font-size:12px;
       color: var(--sub);
-      margin: 0;
+      margin:0;
+      white-space:nowrap;
+    }
+    .rankHint{
+      font-size:12px;
+      color: var(--sub);
+      margin:0;
+      text-align:right;
+      white-space:nowrap;
     }
 
     .rankTable{
@@ -344,18 +352,17 @@
       font-size:12px;
     }
     .rankNum{ width:44px; font-weight:900; }
+
+    /* ★ 票の列は見出しを消すので、右寄せだけ残す */
     .rankVotes{
-      width:86px;
+      width:88px;
       text-align:right;
       font-variant-numeric: tabular-nums;
       font-weight:900;
       white-space:nowrap;
     }
 
-    /* 見出し（ID/票）を消す */
-    .rankTable thead{ display:none; }
-
-    /* ランキング行の中身（写真タップでprofile） */
+    /* ★ ランキングの「名前＋写真」 */
     .rankLeft{
       display:flex;
       align-items:center;
@@ -364,13 +371,14 @@
     }
     .rankThumbLink{
       display:inline-flex;
-      flex:0 0 auto;
-      width:38px;
-      height:38px;
+      width:44px;
+      height:44px;
       border-radius:12px;
       overflow:hidden;
-      border:1px solid #eee;
+      flex:0 0 auto;
+      border:1px solid rgba(0,0,0,.08);
       background:#f2f2f2;
+      text-decoration:none;
     }
     .rankThumb{
       width:100%;
@@ -378,16 +386,17 @@
       object-fit:cover;
       display:block;
     }
-    .rankIdSub{
-      font-weight:800;
-      font-size:13px;
-      color:#111;
-      word-break:break-all;
-      line-height:1.15;
+    .rankName{
+      font-weight:900;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
 
-    /* 集計シートを非表示 */
-    #rankOpenSheet{ display:none !important; }
+    /* ★ 「集計シート」リンクは見えないように隠す（機能は残る） */
+    #rankOpenSheet{
+      display:none;
+    }
   </style>
 </head>
 
@@ -461,9 +470,11 @@
           </div>
         </div>
         <div class="rankBody">
+
+          <!-- ★ 上位◯件と注記 -->
           <div class="rankStatusRow">
             <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
-            <p class="rankStatus">※写真タップでprofileが表示されます。</p>
+            <p class="rankHint">※写真タップでprofileが表示されます。</p>
           </div>
 
           <div style="overflow:auto;">
@@ -471,8 +482,8 @@
               <thead>
                 <tr>
                   <th class="rankNum">#</th>
-                  <th>ID</th>
-                  <th class="rankVotes">票</th>
+                  <th></th>
+                  <th class="rankVotes"></th>
                 </tr>
               </thead>
               <tbody id="rankTbody"></tbody>
@@ -588,6 +599,7 @@ const traineesOnly = [
   {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
 ];
+
 const candidates = [
   {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
   {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
@@ -631,7 +643,7 @@ const candidates = [
 
 const MAX = 11;
 
-// UI elements (vote)
+/* ===== UI elements (vote) ===== */
 const toggleBtn = document.getElementById("toggleBtn");
 const modeText  = document.getElementById("modeText");
 const searchEl  = document.getElementById("search");
@@ -643,27 +655,28 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
-// UI elements (ranking)
+/* ===== UI elements (ranking) ===== */
 const rankTbody = document.getElementById("rankTbody");
 const rankStatus = document.getElementById("rankStatus");
 const rankUpdated = document.getElementById("rankUpdated");
 const rankOpenSheet = document.getElementById("rankOpenSheet");
 
-// view switch
+/* ===== view switch ===== */
 const btnVote = document.getElementById("btnVote");
 const btnRank = document.getElementById("btnRank");
 const voteView = document.getElementById("voteView");
 const rankView = document.getElementById("rankView");
 
-// state
+/* ===== state ===== */
 let showCandidates = false;
 let selected = [];
 let selectedSet = new Set();
 let lastActionStack = [];
 
 let rankTimer = null;
+let hasLoadedRankOnce = false;
 
-// ==== 検索強化 ====
+/* ==== 検索強化 ==== */
 function normalizeText(s){
   return (s || "")
     .toString()
@@ -679,21 +692,34 @@ const trainees = traineesOnly.map(x => ({...x, group:"trainee", searchKey: build
 const candis = candidates.map(x => ({...x, group:"candidate", searchKey: buildSearchKey(x)}));
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
-// ==== scroll位置保持 ====
+/* ★ランキング表示用：日本語名（カッコ前だけ） */
+function jpNameOnly(fullName){
+  return (fullName || "")
+    .split("(")[0]
+    .split("（")[0]
+    .trim();
+}
+function displayNameById(id){
+  const person = byId.get(id);
+  if(!person) return id;
+  return jpNameOnly(person.name);
+}
+
+/* ==== scroll位置保持 ==== */
 function preserveScroll(fn){
   const y = window.scrollY;
   fn();
   requestAnimationFrame(() => window.scrollTo(0, y));
 }
 
-// ==== 表示モード ====
+/* ==== 表示モード ==== */
 function currentList(){ return showCandidates ? candis : trainees; }
 function setModeUI(){
   modeText.textContent = showCandidates ? "練習生候補" : "練習生";
   toggleBtn.classList.toggle("on", !showCandidates);
 }
 
-// ==== 上の11枠 ====
+/* ==== 上の11枠 ==== */
 function renderSlots(){
   slotsEl.innerHTML = "";
   for(let i=0;i<MAX;i++){
@@ -720,7 +746,7 @@ slotsEl.addEventListener("click", (e) => {
   removeSelected(id);
 });
 
-// ==== 一覧 ====
+/* ==== 一覧 ==== */
 function renderGrid(){
   const qRaw = searchEl.value.trim();
   const q = normalizeText(qRaw);
@@ -772,7 +798,7 @@ gridEl.addEventListener("click", (e) => {
   });
 });
 
-// ==== 選択処理 ====
+/* ==== 選択処理 ==== */
 function addSelected(id){
   if(selectedSet.has(id)) return;
   if(selected.length >= MAX){
@@ -812,12 +838,12 @@ function clearAll(){
   updateAll();
 }
 
-// ==== 日付（Tokyo） ====
+/* ==== 日付（Tokyo） ==== */
 function todayTokyo(){
   return new Date().toLocaleDateString("en-CA", { timeZone:"Asia/Tokyo" });
 }
 
-// ==== userKey ====
+/* ==== userKey ==== */
 function getOrCreateUserKey(){
   const keyName = "vote_userKey_v1";
   let k = localStorage.getItem(keyName);
@@ -829,7 +855,7 @@ function getOrCreateUserKey(){
   return k;
 }
 
-// ==== 二重送信ブロック ====
+/* ==== 二重送信ブロック ==== */
 function lastVoteToken(){
   return localStorage.getItem("vote_lastToken_v1") || "";
 }
@@ -837,7 +863,7 @@ function setLastVoteToken(token){
   localStorage.setItem("vote_lastToken_v1", token);
 }
 
-// ==== 送信 ====
+/* ==== 送信 ==== */
 async function submitToGoogleForm(){
   if(selected.length !== MAX){
     alert(`11人選んでから投票してください`);
@@ -882,7 +908,7 @@ async function submitToGoogleForm(){
   }
 }
 
-// ==== 更新 ====
+/* ==== 更新 ==== */
 function updateAll(){
   countEl.textContent = String(selected.length);
   voteBtn.disabled = selected.length !== MAX;
@@ -891,7 +917,7 @@ function updateAll(){
   renderGrid();
 }
 
-// ==== UIイベント ====
+/* ==== UIイベント ==== */
 toggleBtn.addEventListener("click", () => {
   preserveScroll(() => {
     showCandidates = !showCandidates;
@@ -991,15 +1017,16 @@ async function fetchRankingCSV(){
 
       const person = byId.get(x.id);
       const imgUrl = person ? person.img : "";
+      const dispName = displayNameById(x.id);
 
       tr.innerHTML = `
         <td class="rankNum">${shownRank}</td>
         <td>
           <div class="rankLeft">
-            <a class="rankThumbLink" href="${buildRankingLink(x.id)}" target="_blank" rel="noopener noreferrer">
+            <a class="rankThumbLink" href="${buildRankingLink(x.id)}" target="_blank" rel="noopener noreferrer" aria-label="profile">
               <img class="rankThumb" src="${imgUrl}" alt="" onerror="this.style.display='none'">
             </a>
-            <div class="rankIdSub">${x.id}</div>
+            <div class="rankName">${dispName}</div>
           </div>
         </td>
         <td class="rankVotes">${x.votes}票</td>
@@ -1012,6 +1039,7 @@ async function fetchRankingCSV(){
 
     rankStatus.textContent = `上位${top.length}件を表示中（全${data.length}件）`;
     rankUpdated.textContent = `更新: ${nowTokyoTime()}`;
+    hasLoadedRankOnce = true;
   }catch(err){
     console.error(err);
     rankStatus.textContent = "ランキングの読み込みに失敗…（公開設定/URL/ネットを確認してね）";
@@ -1048,7 +1076,7 @@ function showRank(){
 btnVote.addEventListener("click", showVote);
 btnRank.addEventListener("click", showRank);
 
-// 初期描画
+/* 初期描画 */
 setModeUI();
 renderSlots();
 renderGrid();
