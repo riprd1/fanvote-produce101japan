@@ -29,99 +29,56 @@
       background-repeat: no-repeat;
     }
 
-    .page{
-      padding: 16px;
+    /* ===== 右上：画面切替ボタン ===== */
+    .topNav{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--bd);
     }
-
-    /* ===== 追加：ランキング（ヘッダー直下） ===== */
-    .rankWrap{
-      padding: 12px 16px 0;
-    }
-    .rankCard{
-      border:1px solid var(--bd);
-      border-radius:16px;
-      background: #fff;
-      overflow: hidden;
-    }
-    .rankHead{
+    .topNavInner{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding:12px 12px;
-      background: var(--bg);
-      border-bottom:1px solid var(--bd);
+      padding:10px 12px;
     }
-    .rankHead h2{
-      margin:0;
-      font-size:14px;
-      font-weight:900;
-    }
-    .rankMeta{
-      font-size:12px;
+    .brand{
+      font-weight: 900;
+      font-size: 13px;
       color: var(--sub);
-      white-space:nowrap;
+      white-space: nowrap;
     }
-    .rankBody{
-      padding: 10px 12px 12px;
+    .navBtns{
+      display:flex;
+      gap:8px;
+      align-items:center;
     }
-    .rankStatus{
-      font-size:12px;
-      color: var(--sub);
-      margin: 0 0 8px;
-    }
-    .rankTable{
-      width:100%;
-      border-collapse: collapse;
-      font-size:13px;
-    }
-    .rankTable th, .rankTable td{
-      padding: 8px 6px;
-      border-bottom: 1px solid #f0f0f0;
-      vertical-align: middle;
-    }
-    .rankTable th{
-      text-align:left;
-      color: var(--sub);
-      font-weight:800;
-      font-size:12px;
-    }
-    .rankNum{
-      width:44px;
+    .navBtn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--bd);
+      background:#fff;
       font-weight:900;
-    }
-    .rankVotes{
-      width:70px;
-      text-align:right;
-      font-variant-numeric: tabular-nums;
-      font-weight:900;
-    }
-    .rankId{
-      word-break: break-all;
-      font-weight:700;
-    }
-    .rankLink{
+      cursor:pointer;
       display:inline-flex;
       align-items:center;
       gap:6px;
-      text-decoration:none;
-      color:#2f6fe8;
-      font-weight:900;
-      font-size:12px;
-      padding:8px 10px;
-      border:1px solid rgba(47,111,232,.25);
-      border-radius:999px;
-      background: rgba(47,111,232,.06);
     }
-    .rankActions{
-      display:flex;
-      align-items:center;
-      gap:8px;
+    .navBtn.active{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .page{
+      padding: 16px;
     }
 
     h1{font-size:18px;margin:12px 0 10px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .pill{background:var(--pill);padding:6px 10px;border-radius:999px;font-size:12px}
     .btn{
       padding:10px 12px;border:1px solid var(--bd);
       border-radius:12px;background:#fff;font-weight:800;cursor:pointer;
@@ -132,6 +89,11 @@
       padding:10px 12px;border:1px solid var(--bd);
       border-radius:12px;min-width:180px;flex:1;
     }
+    .sub{color:var(--sub);font-size:12px}
+
+    /* ===== 画面切替 ===== */
+    .view{ display:none; }
+    .view.active{ display:block; }
 
     /* ===== 上：選択11人 ===== */
     .selectedWrap{
@@ -151,7 +113,6 @@
     }
     .selectedCount{font-weight:900}
 
-    /* 見やすいサイズ・×なし・タップで削除 */
     .slots{
       display:flex;
       gap:12px;
@@ -173,14 +134,14 @@
       position:relative;
       user-select:none;
       -webkit-user-select:none;
-      touch-action: pan-x; /* 横スクロール許可 */
+      touch-action: pan-x;
     }
     .slot.filled{
       border-style:solid;
       border-color:#dedede;
       padding:0;
       overflow:hidden;
-      cursor: pointer; /* タップで削除 */
+      cursor: pointer;
     }
     .slot img{
       width:100%;
@@ -190,7 +151,7 @@
       background:#f2f2f2;
     }
 
-    /* ===== 見出しと操作行 ===== */
+    /* ===== 一覧エリア（背景画像つき） ===== */
     .listHeader{
       margin-top:14px;
       display:flex;
@@ -203,8 +164,6 @@
       font-size:14px;
       font-weight:900;
     }
-    .sub{color:var(--sub);font-size:12px}
-
     .controlsRow{
       margin-top:10px;
       display:flex;
@@ -215,8 +174,6 @@
       flex: 1;
       min-width: 0;
     }
-
-    /* トグルボタン（pill風） */
     .togglePill{
       padding:10px 12px;
       border-radius:14px;
@@ -232,11 +189,8 @@
     .togglePill .dot{
       width:10px;height:10px;border-radius:999px;background:#111;opacity:.25;
     }
-    .togglePill.on .dot{
-      opacity:1;
-    }
+    .togglePill.on .dot{ opacity:1; }
 
-    /* ===== 一覧エリア 背景画像 ===== */
     .listSection{
       margin-top: 14px;
       border-radius: 18px;
@@ -248,14 +202,12 @@
       padding: 14px;
       border: 1px solid var(--bd);
     }
-    /* 文字が読みにくい場合に備えて薄い下地 */
     .listSection .overlay{
       background: rgba(255,255,255,.82);
       border-radius: 16px;
       padding: 12px;
     }
 
-    /* ===== 下：2列グリッド ===== */
     .grid{
       margin-top:10px;
       display:grid;
@@ -312,14 +264,12 @@
     }
     .meta{font-size:12px;color:var(--sub);margin-top:4px}
 
-    /* 選択済み：グレー＆再選択不可っぽく見せる */
     .picked{
       opacity: .45;
       filter: grayscale(1);
       outline: 2px solid rgba(0,0,0,.08);
-      pointer-events: none; /* ★これで2回目タップ無効 */
+      pointer-events: none;
     }
-    /* profileは押せる（選択済みでもプロフィールは見たい場合） */
     .picked .profileBtn{
       pointer-events: auto;
       opacity: 1;
@@ -329,103 +279,199 @@
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
     }
+
+    /* ===== ランキング画面 ===== */
+    .rankPage{
+      padding: 16px;
+    }
+    .rankCard{
+      border:1px solid var(--bd);
+      border-radius:16px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .rankHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      background: var(--bg);
+      border-bottom:1px solid var(--bd);
+    }
+    .rankHead h2{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+    }
+    .rankMeta{
+      font-size:12px;
+      color: var(--sub);
+      white-space:nowrap;
+    }
+    .rankBody{
+      padding: 10px 12px 12px;
+    }
+    .rankStatus{
+      font-size:12px;
+      color: var(--sub);
+      margin: 0 0 8px;
+    }
+    .rankTable{
+      width:100%;
+      border-collapse: collapse;
+      font-size:13px;
+    }
+    .rankTable th, .rankTable td{
+      padding: 8px 6px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .rankTable th{
+      text-align:left;
+      color: var(--sub);
+      font-weight:800;
+      font-size:12px;
+    }
+    .rankNum{ width:44px; font-weight:900; }
+    .rankVotes{
+      width:70px;
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+    }
+    .rankId{ word-break: break-all; font-weight:700; }
+    .rankLink{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      text-decoration:none;
+      color:#2f6fe8;
+      font-weight:900;
+      font-size:12px;
+      padding:8px 10px;
+      border:1px solid rgba(47,111,232,.25);
+      border-radius:999px;
+      background: rgba(47,111,232,.06);
+    }
+    .rankActions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
   </style>
 </head>
 
 <body>
-  <!-- ヘッダー画像 -->
   <div class="header"></div>
 
-  <!-- ✅ 追加：ランキング（ヘッダーの下） -->
-  <div class="rankWrap">
-    <div class="rankCard">
-      <div class="rankHead">
-        <h2>ランキング</h2>
-        <div class="rankActions">
-          <a id="rankOpenSheet" class="rankLink" href="#" target="_blank" rel="noopener noreferrer">集計シート</a>
-          <span id="rankUpdated" class="rankMeta">読み込み中…</span>
+  <!-- 右上：切替ボタン -->
+  <div class="topNav">
+    <div class="topNavInner">
+      <div class="brand">PRODUCE 101 / 投票</div>
+      <div class="navBtns">
+        <button id="btnVote" class="navBtn active" type="button">投票</button>
+        <button id="btnRank" class="navBtn" type="button">ランキング</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 投票画面 ===== -->
+  <div id="voteView" class="view active">
+    <div class="page">
+      <h1>投票（1回で11人選択）</h1>
+
+      <div class="selectedWrap">
+        <div class="selectedTitle">
+          <span>選択中</span>
+          <span class="selectedCount"><span id="count">0</span>/11</span>
+        </div>
+        <div class="slots" id="slots"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="clearBtn" class="btn">リセット</button>
+          <button id="undoBtn" class="btn">1人戻す</button>
+          <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
+        </div>
+        <div class="sub" style="margin-top:6px;">
+          ※上の顔をタップで削除できます
         </div>
       </div>
-      <div class="rankBody">
-        <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
-        <div style="overflow:auto;">
-          <table class="rankTable" id="rankTable">
-            <thead>
-              <tr>
-                <th class="rankNum">#</th>
-                <th>ID</th>
-                <th class="rankVotes">票</th>
-              </tr>
-            </thead>
-            <tbody id="rankTbody"></tbody>
-          </table>
+
+      <div class="listSection">
+        <div class="overlay">
+          <div class="listHeader">
+            <h2>一覧（押して追加）</h2>
+            <span class="sub" id="resultCount"></span>
+          </div>
+
+          <div class="controlsRow">
+            <input id="search" type="text" placeholder="Search（名前/英字/ID）">
+            <button id="toggleBtn" class="togglePill on" type="button">
+              <span class="dot"></span>
+              <span id="modeText">練習生</span>
+            </button>
+          </div>
+
+          <div class="grid" id="grid"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="page">
-    <!-- ✅ ここに「投票（1回で11人選択）」を置く（ランキングの下） -->
-    <h1>投票（1回で11人選択）</h1>
-
-    <div class="selectedWrap">
-      <div class="selectedTitle">
-        <span>選択中</span>
-        <span class="selectedCount"><span id="count">0</span>/11</span>
-      </div>
-      <div class="slots" id="slots"></div>
-
-      <div class="row" style="margin-top:10px;">
-        <button id="clearBtn" class="btn">リセット</button>
-        <button id="undoBtn" class="btn">1人戻す</button>
-        <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
-      </div>
-      <div class="sub" style="margin-top:6px;">
-        ※上の顔をタップで削除できます
-      </div>
-    </div>
-
-    <!-- 一覧エリア（背景画像つき） -->
-    <div class="listSection">
-      <div class="overlay">
-        <div class="listHeader">
-          <h2>一覧（押して追加）</h2>
-          <span class="sub" id="resultCount"></span>
+  <!-- ===== ランキング画面 ===== -->
+  <div id="rankView" class="view">
+    <div class="rankPage">
+      <div class="rankCard">
+        <div class="rankHead">
+          <h2>ランキング</h2>
+          <div class="rankActions">
+            <a id="rankOpenSheet" class="rankLink" href="#" target="_blank" rel="noopener noreferrer">集計シート</a>
+            <span id="rankUpdated" class="rankMeta">未読込</span>
+          </div>
         </div>
-
-        <div class="controlsRow">
-          <input id="search" type="text" placeholder="Search（名前/英字/ID）">
-          <button id="toggleBtn" class="togglePill on" type="button">
-            <span class="dot"></span>
-            <span id="modeText">練習生</span>
-          </button>
+        <div class="rankBody">
+          <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
+          <div style="overflow:auto;">
+            <table class="rankTable">
+              <thead>
+                <tr>
+                  <th class="rankNum">#</th>
+                  <th>ID</th>
+                  <th class="rankVotes">票</th>
+                </tr>
+              </thead>
+              <tbody id="rankTbody"></tbody>
+            </table>
+          </div>
         </div>
-
-        <div class="grid" id="grid"></div>
+      </div>
+      <div class="sub" style="margin-top:10px;">
+        ※ランキングは「ランキング画面」を開いた時に読み込みます
       </div>
     </div>
   </div>
 
 <script>
-/* =========================================================
-   ✅ ランキングCSV（あなたが貼ったURL）
-========================================================= */
+/* ======================
+   ランキングCSV URL
+====================== */
 const RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXFpCzSxBGA2HUi1iiTUAgbRTbKXn2StuWI-Og82Wcv1z02sAN5QMizZztFdC8-7He31T-ecZq8cPa/pub?gid=1769988094&single=true&output=csv";
-
-/* 表示件数（上位何人見せる？） */
 const RANKING_SHOW_TOP = 30;
 
-/* =========================================================
-   ✅ Googleフォーム送信設定（あなたのURLから作成済み）
-========================================================= */
+/* ======================
+   Googleフォーム送信設定
+====================== */
 const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSe0PiR-AbilNCBcoiwWnnhTlEIIniAx09KPKLUP0xIz7xMl5w/formResponse";
 const ENTRY_USERKEY = "entry.926427886";
 const ENTRY_DATE    = "entry.1759038206";
 const ENTRY_IDS     = "entry.1038992501";
 const BLOCK_DUPLICATE_PER_DAY = true;
 
-/* ====== 練習生データ（あなたのまま） ====== */
-const traineesOnly = [
+/* ====== 練習生データ（あなたのまま：省略せずそのまま貼ってOK） ====== */
+const traineesOnly = [/* ここはあなたの配列そのまま */ 
   {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
   {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
   {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
@@ -510,8 +556,7 @@ const traineesOnly = [
   {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
 ];
-
-const candidates = [
+const candidates = [/* ここはあなたの配列そのまま */ 
   {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
   {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
   {name:"市川 大輝(I.DAIKI)", img:"https://i.imgur.com/72FqxLz.png", id:"ichikawadaiki"},
@@ -551,11 +596,12 @@ const candidates = [
   {name:"藤井 雄聖(F.YUSEI)", img:"https://i.imgur.com/prsNOtG.png", id:"fujiiyusei"},
   {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", id:"okamotoyuto"}
 ];
+
 /* ====== ここまで ====== */
 
 const MAX = 11;
 
-// UI elements
+// UI elements (vote)
 const toggleBtn = document.getElementById("toggleBtn");
 const modeText  = document.getElementById("modeText");
 const searchEl  = document.getElementById("search");
@@ -567,19 +613,28 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
-// ranking UI
+// UI elements (ranking)
 const rankTbody = document.getElementById("rankTbody");
 const rankStatus = document.getElementById("rankStatus");
 const rankUpdated = document.getElementById("rankUpdated");
 const rankOpenSheet = document.getElementById("rankOpenSheet");
 
+// view switch
+const btnVote = document.getElementById("btnVote");
+const btnRank = document.getElementById("btnRank");
+const voteView = document.getElementById("voteView");
+const rankView = document.getElementById("rankView");
+
 // state
-let showCandidates = false;     // 初期は練習生
-let selected = [];              // 並び順もこれで保持
+let showCandidates = false;
+let selected = [];
 let selectedSet = new Set();
 let lastActionStack = [];
 
-// ==== 検索強化（英字/記号/全角半角）====
+let rankTimer = null;
+let hasLoadedRankOnce = false;
+
+// ==== 検索強化 ====
 function normalizeText(s){
   return (s || "")
     .toString()
@@ -591,17 +646,8 @@ function buildSearchKey(t){
   return [t.name || "", t.id || ""].map(normalizeText).join(" ");
 }
 
-// 合体データ（searchKey付き）
-const trainees = traineesOnly.map(x => {
-  const obj = {...x, group:"trainee"};
-  obj.searchKey = buildSearchKey(obj);
-  return obj;
-});
-const candis = candidates.map(x => {
-  const obj = {...x, group:"candidate"};
-  obj.searchKey = buildSearchKey(obj);
-  return obj;
-});
+const trainees = traineesOnly.map(x => ({...x, group:"trainee", searchKey: buildSearchKey(x)}));
+const candis = candidates.map(x => ({...x, group:"candidate", searchKey: buildSearchKey(x)}));
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
 
 // ==== scroll位置保持 ====
@@ -612,22 +658,19 @@ function preserveScroll(fn){
 }
 
 // ==== 表示モード ====
-function currentList(){
-  return showCandidates ? candis : trainees;
-}
+function currentList(){ return showCandidates ? candis : trainees; }
 function setModeUI(){
   modeText.textContent = showCandidates ? "練習生候補" : "練習生";
   toggleBtn.classList.toggle("on", !showCandidates);
 }
 
-// ==== 上の11枠（×なし：タップで削除） ====
+// ==== 上の11枠 ====
 function renderSlots(){
   slotsEl.innerHTML = "";
   for(let i=0;i<MAX;i++){
     const id = selected[i];
     const slot = document.createElement("div");
     slot.className = "slot" + (id ? " filled" : "");
-    slot.setAttribute("data-index", String(i));
     if(id) slot.setAttribute("data-id", id);
 
     if(id){
@@ -640,8 +683,6 @@ function renderSlots(){
     slotsEl.appendChild(slot);
   }
 }
-
-// 上の枠：タップで削除
 slotsEl.addEventListener("click", (e) => {
   const slot = e.target.closest(".slot.filled");
   if(!slot) return;
@@ -650,26 +691,23 @@ slotsEl.addEventListener("click", (e) => {
   removeSelected(id);
 });
 
-// ==== 一覧（2列） ====
+// ==== 一覧 ====
 function renderGrid(){
   const qRaw = searchEl.value.trim();
   const q = normalizeText(qRaw);
 
   const list = currentList().filter(t => {
     if(!q) return true;
-
     const rawHit =
       (t.name || "").toLowerCase().includes(qRaw.toLowerCase()) ||
       (t.id || "").toLowerCase().includes(qRaw.toLowerCase());
-
     const keyHit = (t.searchKey || "").includes(q);
-
     return rawHit || keyHit;
   });
 
   resultCountEl.textContent = `${list.length}件`;
-
   gridEl.innerHTML = "";
+
   for(const t of list){
     const picked = selectedSet.has(t.id);
     const card = document.createElement("div");
@@ -684,7 +722,6 @@ function renderGrid(){
            target="_blank" rel="noopener noreferrer"
            data-profile-link="1">profile</a>
       </div>
-
       <div class="info">
         <div class="name">${t.name}</div>
         <div class="meta">${showCandidates ? "練習生候補" : "練習生"}</div>
@@ -693,11 +730,8 @@ function renderGrid(){
     gridEl.appendChild(card);
   }
 }
-
-// 一覧：カード押しで追加/解除（profileは除外）
 gridEl.addEventListener("click", (e) => {
   if (e.target.closest('[data-profile-link="1"]')) return;
-
   const card = e.target.closest(".card");
   if(!card) return;
   const id = card.getAttribute("data-id");
@@ -711,7 +745,7 @@ gridEl.addEventListener("click", (e) => {
 
 // ==== 選択処理 ====
 function addSelected(id){
-  if(selectedSet.has(id)) return; // 2回目追加防止
+  if(selectedSet.has(id)) return;
   if(selected.length >= MAX){
     alert(`最大${MAX}人までです`);
     return;
@@ -754,7 +788,7 @@ function todayTokyo(){
   return new Date().toLocaleDateString("en-CA", { timeZone:"Asia/Tokyo" });
 }
 
-// ==== userKey（端末ごとに固定） ====
+// ==== userKey ====
 function getOrCreateUserKey(){
   const keyName = "vote_userKey_v1";
   let k = localStorage.getItem(keyName);
@@ -766,7 +800,7 @@ function getOrCreateUserKey(){
   return k;
 }
 
-// ==== 二重送信ブロック（端末内） ====
+// ==== 二重送信ブロック ====
 function lastVoteToken(){
   return localStorage.getItem("vote_lastToken_v1") || "";
 }
@@ -774,7 +808,7 @@ function setLastVoteToken(token){
   localStorage.setItem("vote_lastToken_v1", token);
 }
 
-// ==== Googleフォームへ送信 ====
+// ==== 送信 ====
 async function submitToGoogleForm(){
   if(selected.length !== MAX){
     alert(`11人選んでから投票してください`);
@@ -790,8 +824,7 @@ async function submitToGoogleForm(){
     return;
   }
 
-  const ids = selected.slice(0, MAX);
-  const idsStr = JSON.stringify(ids);
+  const idsStr = JSON.stringify(selected.slice(0, MAX));
 
   const fd = new FormData();
   fd.append(ENTRY_USERKEY, userKey);
@@ -802,20 +835,17 @@ async function submitToGoogleForm(){
     voteBtn.disabled = true;
     voteBtn.textContent = "送信中…";
 
-    await fetch(FORM_ACTION, {
-      method: "POST",
-      mode: "no-cors",
-      body: fd
-    });
+    await fetch(FORM_ACTION, { method: "POST", mode: "no-cors", body: fd });
 
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
     alert("投票を送信しました！\n（スプレッドシートに反映されます）");
-
     clearAll();
 
-    // ✅ 追加：送信後にランキングも更新
-    fetchRankingCSV();
+    // ランキング画面を開いてたら更新
+    if(rankView.classList.contains("active")){
+      fetchRankingCSV();
+    }
   }catch(err){
     console.error(err);
     alert("送信に失敗しました。\nネット接続やブラウザ設定を確認してください。");
@@ -833,7 +863,7 @@ function updateAll(){
   renderGrid();
 }
 
-// ==== トグル切替 ====
+// ==== UIイベント ====
 toggleBtn.addEventListener("click", () => {
   preserveScroll(() => {
     showCandidates = !showCandidates;
@@ -841,30 +871,19 @@ toggleBtn.addEventListener("click", () => {
     renderGrid();
   });
 });
-
-// ==== 検索 ====
-searchEl.addEventListener("input", () => {
-  preserveScroll(() => renderGrid());
-});
-
-// ==== ボタン ====
+searchEl.addEventListener("input", () => preserveScroll(() => renderGrid()));
 undoBtn.addEventListener("click", () => preserveScroll(() => undo()));
 clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
 });
-voteBtn.addEventListener("click", () => {
-  submitToGoogleForm();
-});
+voteBtn.addEventListener("click", () => submitToGoogleForm());
 
-/* =========================================================
-   ✅ ランキングCSV読み込み（Google Sheets -> CSV）
-========================================================= */
-
-// （CSVの "集計シート" ボタンリンク用：pub? から元シートは直接開けないので、csv自体を開く）
+/* ======================
+   ランキングCSV読み込み
+====================== */
 rankOpenSheet.href = RANKING_CSV_URL;
 
-// 簡易CSVパーサ（引用符対応）
 function parseCSV(text){
   const rows = [];
   let row = [];
@@ -875,46 +894,26 @@ function parseCSV(text){
     const ch = text[i];
     const next = text[i+1];
 
-    if(ch === '"' ){
-      if(inQuotes && next === '"'){ // "" -> "
-        cur += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
+    if(ch === '"'){
+      if(inQuotes && next === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
       continue;
     }
-
-    if(!inQuotes && ch === ","){
-      row.push(cur);
-      cur = "";
-      continue;
-    }
-
+    if(!inQuotes && ch === ","){ row.push(cur); cur=""; continue; }
     if(!inQuotes && (ch === "\n" || ch === "\r")){
       if(ch === "\r" && next === "\n") i++;
-      row.push(cur);
-      rows.push(row);
-      row = [];
-      cur = "";
+      row.push(cur); rows.push(row);
+      row=[]; cur="";
       continue;
     }
-
     cur += ch;
   }
-
-  // last
-  if(cur.length || row.length){
-    row.push(cur);
-    rows.push(row);
-  }
+  if(cur.length || row.length){ row.push(cur); rows.push(row); }
   return rows;
 }
-
 function nowTokyoTime(){
   return new Date().toLocaleString("ja-JP", { timeZone:"Asia/Tokyo" });
 }
-
 function buildRankingLink(id){
   return `https://produce101.jp/profile/detail/?id=${encodeURIComponent(id)}`;
 }
@@ -925,9 +924,7 @@ async function fetchRankingCSV(){
     rankUpdated.textContent = "読み込み中…";
     rankTbody.innerHTML = "";
 
-    // キャッシュ回避（更新が遅い時用）
     const url = RANKING_CSV_URL + "&_ts=" + Date.now();
-
     const res = await fetch(url, { method:"GET", cache:"no-store" });
     if(!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
@@ -936,19 +933,14 @@ async function fetchRankingCSV(){
       .map(r => r.map(x => (x ?? "").toString().trim()))
       .filter(r => r.some(x => x !== ""));
 
-    if(rows.length < 2){
-      throw new Error("CSVが空っぽっぽい");
-    }
+    if(rows.length < 2) throw new Error("CSVが空っぽ");
 
-    // 先頭行ヘッダー想定: id,votes,rank（順が違っても対応）
     const header = rows[0].map(h => h.toLowerCase());
     const idxId = header.indexOf("id");
     const idxVotes = header.indexOf("votes");
     const idxRank = header.indexOf("rank");
 
-    if(idxId === -1 || idxVotes === -1){
-      throw new Error("CSVの列名が想定と違う（id/votesが見つからない）");
-    }
+    if(idxId === -1 || idxVotes === -1) throw new Error("CSV列名が違う（id/votes無し）");
 
     const data = rows.slice(1).map(r => ({
       id: r[idxId] || "",
@@ -956,7 +948,6 @@ async function fetchRankingCSV(){
       rank: idxRank !== -1 ? (Number((r[idxRank] || "").replace(/[^\d\-]/g,"")) || null) : null
     })).filter(x => x.id);
 
-    // rankが入ってるならrank優先で並べる。なければvotes降順
     data.sort((a,b) => {
       if(a.rank != null && b.rank != null) return a.rank - b.rank;
       if(b.votes !== a.votes) return b.votes - a.votes;
@@ -964,8 +955,8 @@ async function fetchRankingCSV(){
     });
 
     const top = data.slice(0, RANKING_SHOW_TOP);
-
     const frag = document.createDocumentFragment();
+
     top.forEach((x, i) => {
       const tr = document.createElement("tr");
       const shownRank = (x.rank != null) ? x.rank : (i+1);
@@ -984,6 +975,7 @@ async function fetchRankingCSV(){
 
     rankStatus.textContent = `上位${top.length}件を表示中（全${data.length}件）`;
     rankUpdated.textContent = `更新: ${nowTokyoTime()}`;
+    hasLoadedRankOnce = true;
   }catch(err){
     console.error(err);
     rankStatus.textContent = "ランキングの読み込みに失敗…（公開設定/URL/ネットを確認してね）";
@@ -991,17 +983,43 @@ async function fetchRankingCSV(){
   }
 }
 
+/* ======================
+   画面切替（投票 ⇄ ランキング）
+====================== */
+function showVote(){
+  voteView.classList.add("active");
+  rankView.classList.remove("active");
+  btnVote.classList.add("active");
+  btnRank.classList.remove("active");
+
+  // ランキング自動更新停止
+  if(rankTimer){ clearInterval(rankTimer); rankTimer = null; }
+  window.scrollTo(0,0);
+}
+function showRank(){
+  rankView.classList.add("active");
+  voteView.classList.remove("active");
+  btnRank.classList.add("active");
+  btnVote.classList.remove("active");
+
+  // 開いた時に読み込む（初回 or 毎回どっちでもOK。ここは毎回にしてる）
+  fetchRankingCSV();
+
+  // ランキング画面の時だけ30秒更新
+  if(rankTimer){ clearInterval(rankTimer); }
+  rankTimer = setInterval(fetchRankingCSV, 30000);
+
+  window.scrollTo(0,0);
+}
+
+btnVote.addEventListener("click", showVote);
+btnRank.addEventListener("click", showRank);
+
 // 初期描画
 setModeUI();
 renderSlots();
 renderGrid();
 updateAll();
-
-// ✅ ページ表示時にランキング取得
-fetchRankingCSV();
-
-// ✅ 30秒ごとに自動更新（要らなければ消してOK）
-setInterval(fetchRankingCSV, 30000);
 </script>
 </body>
 </html>
