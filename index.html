@@ -243,6 +243,59 @@
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
     }
+
+    /* ===== 追加：ランキング表示の見た目 ===== */
+    .rankingWrap{
+      margin: 14px 0 0;
+      border:1px solid var(--bd);
+      border-radius:18px;
+      padding:12px;
+      background:#fff;
+    }
+    .rankingHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .rankingHead h2{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+    }
+    .rankingStatus{
+      color:var(--sub);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 55%;
+      text-align:right;
+    }
+    .rankingTableWrap{
+      overflow:auto;
+      border:1px solid #eee;
+      border-radius:14px;
+    }
+    table.rankingTable{
+      width:100%;
+      border-collapse:collapse;
+      min-width: 360px;
+    }
+    table.rankingTable th, table.rankingTable td{
+      padding:10px;
+      border-bottom:1px solid #f1f1f1;
+      font-size:13px;
+    }
+    table.rankingTable th{
+      background:#fafafa;
+      text-align:left;
+      font-weight:900;
+    }
+    table.rankingTable td:last-child, table.rankingTable th:last-child{
+      text-align:right;
+    }
   </style>
 </head>
 
@@ -289,6 +342,38 @@
         <div class="grid" id="grid"></div>
       </div>
     </div>
+
+    <!-- ===== 追加：ランキング表示（GitHubに出す用） ===== -->
+    <div class="rankingWrap" id="rankingSection">
+      <div class="rankingHead">
+        <h2>ランキング（総合）</h2>
+        <div class="row" style="gap:8px;">
+          <button id="reloadRanking" class="btn" type="button" style="padding:8px 10px;border-radius:12px;">
+            更新
+          </button>
+          <div id="rankingStatus" class="rankingStatus"></div>
+        </div>
+      </div>
+
+      <div class="rankingTableWrap">
+        <table class="rankingTable" id="rankingTable">
+          <thead>
+            <tr>
+              <th style="width:70px;">順位</th>
+              <th>ID</th>
+              <th style="width:90px;">票数</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="sub" style="margin-top:8px;">
+        ※このランキングは、スプレッドシートを「ウェブに公開(CSV)」したデータを読み込みます
+      </div>
+    </div>
+    <!-- ===== 追加ここまで ===== -->
+
   </div>
 
 <script>
@@ -698,6 +783,11 @@ async function submitToGoogleForm(){
 
     // 送信後に選択を消す（不要ならコメントアウトOK）
     clearAll();
+
+    // ★追加：投票後にランキングも更新しておく
+    if (typeof loadRankingFromCSV === "function") {
+      loadRankingFromCSV();
+    }
   }catch(err){
     console.error(err);
     alert("送信に失敗しました。\nネット接続やブラウザ設定を確認してください。");
@@ -747,6 +837,111 @@ setModeUI();
 renderSlots();
 renderGrid();
 updateAll();
+
+/* =========================================================
+   ✅ 追加：GitHubにランキングを出す（CSV読込）
+   ---------------------------------------------------------
+   手順：
+   1) スプレッドシート側で「公開」シートを作る（id,votes,rank の3列）
+   2) ファイル → ウェブに公開 → 「公開」シート / CSV
+   3) 出てきたURLを CSV_URL に貼る
+========================================================= */
+
+// ★ここに「ウェブに公開(CSV)」のURLを貼る
+// 例: https://docs.google.com/spreadsheets/d/e/XXXX/pub?gid=123&single=true&output=csv
+const CSV_URL = "ここにCSV公開URLを貼る";
+
+// CSVの1行パース（"..."内のカンマ対応）
+function parseCSVLine(line) {
+  const out = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (c === "," && !inQuotes) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+
+async function loadRankingFromCSV(){
+  const statusEl = document.getElementById("rankingStatus");
+  const tbody = document.querySelector("#rankingTable tbody");
+  if(!statusEl || !tbody) return;
+
+  if(!CSV_URL || CSV_URL.includes("ここにCSV公開URL")) {
+    statusEl.textContent = "CSV URL未設定（CSV_URLに貼ってね）";
+    tbody.innerHTML = "";
+    return;
+  }
+
+  statusEl.textContent = "読み込み中…";
+  tbody.innerHTML = "";
+
+  try{
+    const url = CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) throw new Error("CSV取得失敗: " + res.status);
+
+    const text = await res.text();
+    const lines = text.trim().split(/\r?\n/);
+
+    if(lines.length <= 1){
+      statusEl.textContent = "データなし（まだ投票0件？）";
+      return;
+    }
+
+    // 1行目はヘッダー想定：id,votes,rank（rankは無くてもOK）
+    const rows = lines.slice(1).map(parseCSVLine);
+
+    const data = rows
+      .filter(r => r.length >= 2 && (r[0] || "") !== "")
+      .map(r => {
+        const id = (r[0] || "").replace(/^"|"$/g, "");
+        const votes = Number((r[1] || "0").replace(/^"|"$/g, "")) || 0;
+        const rank = r[2] ? (Number((r[2] || "").replace(/^"|"$/g, "")) || null) : null;
+        return { id, votes, rank };
+      });
+
+    // votes降順
+    data.sort((a,b) => b.votes - a.votes);
+
+    // rankが無ければ自動で付与
+    data.forEach((x,i) => { if(!x.rank) x.rank = i + 1; });
+
+    for(const row of data){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row.rank}</td>
+        <td>${row.id}</td>
+        <td>${row.votes}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    statusEl.textContent = "最終更新: " + new Date().toLocaleString("ja-JP");
+  }catch(e){
+    statusEl.textContent = "読み込み失敗: " + (e && e.message ? e.message : e);
+  }
+}
+
+// 更新ボタン
+const reloadBtn = document.getElementById("reloadRanking");
+if(reloadBtn){
+  reloadBtn.addEventListener("click", loadRankingFromCSV);
+}
+
+// 初回読み込み + 定期更新（30秒）
+loadRankingFromCSV();
+setInterval(loadRankingFromCSV, 30000);
 </script>
 </body>
 </html>
