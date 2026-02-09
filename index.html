@@ -165,22 +165,23 @@
       font-weight:900;
     }
     .controlsRow{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
 
-/* ←この下に追加するだけ */
-.stickyControls{
-  position: sticky;
-  top: 56px;
-  z-index: 30;
-  background: rgba(255,255,255,.95);
-  backdrop-filter: blur(6px);
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
+    /* ←この下に追加するだけ */
+    .stickyControls{
+      position: sticky;
+      top: 56px;
+      z-index: 30;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(6px);
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
     .controlsRow input[type="text"]{
       flex: 1;
       min-width: 0;
@@ -205,7 +206,7 @@
     .listSection{
       margin-top: 14px;
       border-radius: 18px;
-      overflow: hidden;
+      overflow: visible; /* ★ここだけ修正：stickyが効くように */
       background-image: url("https://i.imgur.com/eTuwSDL.png");
       background-size: cover;
       background-position: center;
@@ -1023,45 +1024,45 @@ async function fetchRankingCSV(){
     const frag = document.createDocumentFragment();
 
     // ★ 同票は同率順位
-let prevVotes = null;
-let prevRank = 0;
+    let prevVotes = null;
+    let prevRank = 0;
 
-top.forEach((x, i) => {
-  const tr = document.createElement("tr");
+    top.forEach((x, i) => {
+      const tr = document.createElement("tr");
 
-  let shownRank;
-  if (prevVotes !== null && x.votes === prevVotes) {
-    shownRank = prevRank;
-  } else {
-    shownRank = i + 1;
-    prevRank = shownRank;
-    prevVotes = x.votes;
-  }
+      let shownRank;
+      if (prevVotes !== null && x.votes === prevVotes) {
+        shownRank = prevRank;
+      } else {
+        shownRank = i + 1;
+        prevRank = shownRank;
+        prevVotes = x.votes;
+      }
 
-  const person = byId.get(x.id);
-  const imgUrl = person ? person.img : "";
-  const dispName = person ? person.name.split("(")[0] : x.id;
+      const person = byId.get(x.id);
+      const imgUrl = person ? person.img : "";
+      const dispName = person ? person.name.split("(")[0] : x.id;
 
-  tr.innerHTML = `
-    <td class="rankNum">${shownRank}</td>
-    <td>
-      <div class="rankLeft">
-        <a class="rankThumbLink"
-           href="${buildRankingLink(x.id)}"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="profile">
-          <img class="rankThumb"
-               src="${imgUrl}"
-               alt=""
-               onerror="this.style.display='none'">
-        </a>
-        <div class="rankName">${dispName}</div>
-      </div>
-    </td>
-    <td class="rankVotes">${x.votes}票</td>
-  `;
-  frag.appendChild(tr);
-});
+      tr.innerHTML = `
+        <td class="rankNum">${shownRank}</td>
+        <td>
+          <div class="rankLeft">
+            <a class="rankThumbLink"
+               href="${buildRankingLink(x.id)}"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="profile">
+              <img class="rankThumb"
+                   src="${imgUrl}"
+                   alt=""
+                   onerror="this.style.display='none'">
+            </a>
+            <div class="rankName">${dispName}</div>
+          </div>
+        </td>
+        <td class="rankVotes">${x.votes}票</td>
+      `;
+      frag.appendChild(tr);
+    });
 
     rankTbody.innerHTML = "";
     rankTbody.appendChild(frag);
