@@ -444,6 +444,93 @@
     }
 
     #rankOpenSheet{ display:none; }
+
+    /* =========================
+       ★ 投票完了モーダル（追加）
+    ========================== */
+    .modalOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+    .modalOverlay.open{ display:flex; }
+
+    .modalCard{
+      width: min(420px, 100%);
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.08);
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      overflow: hidden;
+    }
+    .modalHead{
+      padding: 14px 14px 10px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--bd);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .modalTitle{
+      font-weight: 1000;
+      font-size: 14px;
+      margin: 0;
+    }
+    .modalCloseX{
+      border: 1px solid var(--bd);
+      background:#fff;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-weight: 1000;
+      line-height: 1;
+    }
+    .modalBody{
+      padding: 14px;
+    }
+    .modalMsg{
+      margin: 0 0 12px;
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .modalSub{
+      margin: 0 0 14px;
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .modalActions{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .modalBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--bd);
+      background:#fff;
+      font-weight: 1000;
+      cursor:pointer;
+      text-decoration:none;
+      color:#111;
+      line-height:1;
+    }
+    .modalBtn.primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
   </style>
 </head>
 
@@ -479,7 +566,7 @@
           <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
         </div>
 
-        <!-- Xシェア（追加：投票後に表示） -->
+        <!-- Xシェア（追加：投票後に表示） ※今回はモーダルに出すので基本は非表示のままでもOK -->
         <div id="shareWrap" class="shareRow" style="display:none;">
           <a id="xShareBtn" class="xShareBtn" href="#" target="_blank" rel="noopener noreferrer">Xでシェア</a>
           <span class="sub">※押すとXの投稿画面が開きます</span>
@@ -561,6 +648,26 @@
     </div>
   </div>
 
+  <!-- =========================
+       ★ 投票完了モーダル（追加）
+  ========================== -->
+  <div id="successModal" class="modalOverlay" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+      <div class="modalHead">
+        <p id="successTitle" class="modalTitle">送信完了</p>
+        <button id="successCloseX" class="modalCloseX" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="modalBody">
+        <p class="modalMsg">投票を送信しました！</p>
+        <p class="modalSub">このままXの投稿画面へ飛べます（ハッシュタグ付き）。</p>
+        <div class="modalActions">
+          <a id="successXBtn" class="modalBtn primary" href="#" target="_blank" rel="noopener noreferrer">Xでシェア</a>
+          <button id="successOkBtn" class="modalBtn" type="button">閉じる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* ======================
    ランキングCSV URL
@@ -632,7 +739,7 @@ const traineesOnly = [
   {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
   {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
   {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
-  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHkqY.png", id:"okadoryuga"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHkjY.png", id:"okadoryuga"},
   {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
   {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
   {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
@@ -722,7 +829,7 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
-/* ===== Xシェア（追加） ===== */
+/* ===== Xシェア（既存） ===== */
 const shareWrap = document.getElementById("shareWrap");
 const xShareBtn = document.getElementById("xShareBtn");
 
@@ -755,7 +862,41 @@ let hasLoadedRankOnce = false;
 let rankAllData = [];
 let rankVisibleCount = RANKING_SHOW_TOP;
 
-/* ===== X投稿リンク（追加） ===== */
+/* =========================
+   ★ 投票完了モーダル（追加）
+========================= */
+const successModal  = document.getElementById("successModal");
+const successXBtn   = document.getElementById("successXBtn");
+const successOkBtn  = document.getElementById("successOkBtn");
+const successCloseX = document.getElementById("successCloseX");
+
+function openSuccessModal(){
+  if(!successModal) return;
+  if(successXBtn) successXBtn.href = buildXIntentURL();
+  successModal.classList.add("open");
+  successModal.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeSuccessModal(){
+  if(!successModal) return;
+  successModal.classList.remove("open");
+  successModal.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+if(successOkBtn) successOkBtn.addEventListener("click", closeSuccessModal);
+if(successCloseX) successCloseX.addEventListener("click", closeSuccessModal);
+if(successModal){
+  successModal.addEventListener("click", (e) => {
+    if(e.target === successModal) closeSuccessModal();
+  });
+}
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape" && successModal && successModal.classList.contains("open")){
+    closeSuccessModal();
+  }
+});
+
+/* ===== X投稿リンク ===== */
 function buildXIntentURL(){
   const text =
 `投票しました！
@@ -950,7 +1091,7 @@ async function submitToGoogleForm(){
   const token = `${userKey}|${date}`;
 
   if(BLOCK_DUPLICATE_PER_DAY && lastVoteToken() === token){
-    alert("この端末では今日すでに投票済みです。\n（別の端末/別ブラウザなら別扱いになります）");
+    alert("この端末では今日すでに投票済みです。");
     return;
   }
 
@@ -969,11 +1110,14 @@ async function submitToGoogleForm(){
 
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
-    alert("投票を送信しました！");
+    // ★ ここで「投票を送信しました！」画面（モーダル）を出す
+    openSuccessModal();
 
+    // （残しておいてもOK：下にもXを出したいなら）
     if(shareWrap && xShareBtn){
       xShareBtn.href = buildXIntentURL();
-      shareWrap.style.display = "flex";
+      // shareWrap.style.display = "flex"; // ←下にも出したいならコメント外す
+      shareWrap.style.display = "none";   // ←モーダルだけにしたいので非表示維持
     }
 
     clearAll();
@@ -1053,12 +1197,12 @@ function buildRankingLink(id){
   return `https://produce101.jp/profile/detail/?id=${encodeURIComponent(id)}`;
 }
 
-/* ★ ランキング描画（追加：rankVisibleCount分だけ表示） */
+/* ★ ランキング描画（rankVisibleCount分だけ表示） */
 function renderRanking(){
   const list = rankAllData.slice(0, rankVisibleCount);
-
   const frag = document.createDocumentFragment();
 
+  // 同票は同率順位
   let prevVotes = null;
   let prevRank = 0;
 
@@ -1111,7 +1255,6 @@ function renderRanking(){
     rankStatus.textContent = `表示中: ${shown} / 全${total}件`;
   }
 
-  // ボタン表示/文言
   if(rankMoreWrap && rankMoreBtn){
     if(shown < total){
       rankMoreWrap.style.display = "block";
@@ -1164,7 +1307,6 @@ async function fetchRankingCSV(){
       return a.id.localeCompare(b.id);
     });
 
-    // 全データを保持して、rankVisibleCount分だけ描画
     rankAllData = data;
     renderRanking();
 
@@ -1179,7 +1321,7 @@ async function fetchRankingCSV(){
   }
 }
 
-/* ★ さらに表示 クリック（追加） */
+/* ★ さらに表示 クリック */
 if(rankMoreBtn){
   rankMoreBtn.addEventListener("click", () => {
     const total = rankAllData.length;
