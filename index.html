@@ -109,6 +109,30 @@
     }
     .tiktokBtn:active{ transform: translateY(1px); }
 
+    /* ===== Xシェア（追加） ===== */
+    .shareRow{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .xShareBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--bd);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+      text-decoration:none;
+      color:#111;
+      line-height: 1;
+    }
+    .xShareBtn:active{ transform: translateY(1px); }
+
     /* ===== 画面切替 ===== */
     .view{ display:none; }
     .view.active{ display:block; }
@@ -461,6 +485,13 @@
           <button id="undoBtn" class="btn">1人戻す</button>
           <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
         </div>
+
+        <!-- Xシェア（追加：投票後に表示） -->
+        <div id="shareWrap" class="shareRow" style="display:none;">
+          <a id="xShareBtn" class="xShareBtn" href="#" target="_blank" rel="noopener noreferrer">Xでシェア</a>
+          <span class="sub">※押すとXの投稿画面が開きます</span>
+        </div>
+
         <div class="sub" style="margin-top:6px;">
   ※上の顔をタップで削除できます<br>
   ※投票権は日本時間0:00にリセットされます<br>
@@ -691,6 +722,10 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
+/* ===== Xシェア（追加） ===== */
+const shareWrap = document.getElementById("shareWrap");
+const xShareBtn = document.getElementById("xShareBtn");
+
 /* ===== UI elements (ranking) ===== */
 const rankTbody = document.getElementById("rankTbody");
 const rankStatus = document.getElementById("rankStatus");
@@ -711,6 +746,15 @@ let lastActionStack = [];
 
 let rankTimer = null;
 let hasLoadedRankOnce = false;
+
+/* ===== X投稿リンク（追加） ===== */
+function buildXIntentURL(){
+  const text =
+`投票しました！
+#日プ新世界 #日プ投票メーカー #PRODUCE101JAPAN新世界`;
+  const url = location.href;
+  return "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
+}
 
 /* ==== 検索強化 ==== */
 function normalizeText(s){
@@ -931,6 +975,13 @@ async function submitToGoogleForm(){
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
     alert("投票を送信しました！");
+
+    /* ===== 投票後にXシェアを出す（追加） ===== */
+    if(shareWrap && xShareBtn){
+      xShareBtn.href = buildXIntentURL();
+      shareWrap.style.display = "flex";
+    }
+
     clearAll();
 
     if(rankView.classList.contains("active")){
