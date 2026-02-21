@@ -91,6 +91,24 @@
     }
     .sub{color:var(--sub);font-size:12px}
 
+    /* ===== TikTokボタン（追加） ===== */
+    .tiktokBtn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 10px; /* ←間を広げたいならここを増やす */
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.15);
+      background: rgba(255,255,255,.9);
+      color: #111;
+      font-weight: 900;
+      font-size: 12px;
+      text-decoration: none;
+      line-height: 1;
+    }
+    .tiktokBtn:active{ transform: translateY(1px); }
+
     /* ===== 画面切替 ===== */
     .view{ display:none; }
     .view.active{ display:block; }
@@ -449,6 +467,8 @@
   <span style="color:#d00; font-weight:900;">
     ※本ページは非公式（ファンメイド）であり<br>
     番組・運営・公式投票とは無関係です。
+    <!-- TikTokボタン（追加） -->
+    <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener noreferrer">TikTok</a>
   </span>
 </div>
       </div>
