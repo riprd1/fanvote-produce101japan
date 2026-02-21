@@ -531,6 +531,110 @@
       color:#fff;
       border-color:#111;
     }
+
+    /* =========================
+       ★ マイ投票（追加）
+    ========================== */
+    .myBox{
+      border:1px solid var(--bd);
+      border-radius:16px;
+      background:#fff;
+      padding:10px;
+      margin: 0 0 10px;
+    }
+    .myBtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .myBtn{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--bd);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      line-height:1;
+    }
+    .myBtn.active{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .myPanel{
+      margin-top:10px;
+      border-top:1px solid #f0f0f0;
+      padding-top:10px;
+      display:none;
+    }
+    .myPanel.active{ display:block; }
+
+    .myGrid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+    .myItem{
+      border:1px solid #f1f1f1;
+      border-radius:14px;
+      padding:8px;
+      background:#fff;
+    }
+    .myThumb{
+      width:100%;
+      aspect-ratio: 1 / 1;
+      border-radius:12px;
+      overflow:hidden;
+      background:#f2f2f2;
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .myThumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .myName{
+      margin-top:6px;
+      font-weight:900;
+      font-size:12px;
+      line-height:1.2;
+      word-break:break-word;
+    }
+    .myCount{
+      margin-top:4px;
+      font-size:12px;
+      color: var(--sub);
+      font-weight:900;
+    }
+    .myTop3{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .myRankBadge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.12);
+      font-weight:1000;
+      font-size:12px;
+      background:#fff;
+    }
+    .myNote{
+      margin-top:10px;
+      font-size:12px;
+      color: var(--sub);
+      line-height:1.5;
+    }
   </style>
 </head>
 
@@ -616,6 +720,42 @@
           </div>
         </div>
         <div class="rankBody">
+
+          <!-- ★ マイ投票ボタン（追加：ランキングの上） -->
+          <div class="myBox">
+            <div class="myBtns">
+              <button id="btnMyToday" class="myBtn" type="button">🗳 今日の投票</button>
+              <button id="btnMyTotal" class="myBtn" type="button">📊 マイ累計</button>
+            </div>
+
+            <div id="panelMyToday" class="myPanel">
+              <div class="sub" id="myTodayMeta">未保存</div>
+              <div id="myTodayGrid" class="myGrid" style="margin-top:10px;"></div>
+              <div class="myNote">
+                ※同じ端末・同じブラウザでのみ表示されます。<br>
+                ※閲覧履歴/サイトデータ削除・別ブラウザで開くと消える可能性があります。
+              </div>
+            </div>
+
+            <div id="panelMyTotal" class="myPanel">
+              <div class="sub" id="myTotalMeta">未保存</div>
+
+              <div style="margin-top:10px;">
+                <div class="sub" style="font-weight:900;">上位3名（回数順）</div>
+                <div id="myTop3" class="myTop3" style="margin-top:8px;"></div>
+              </div>
+
+              <div style="margin-top:12px;">
+                <div class="sub" style="font-weight:900;">その他</div>
+                <div id="myTotalGrid" class="myGrid" style="margin-top:8px;"></div>
+              </div>
+
+              <div class="myNote">
+                ※同じ端末・同じブラウザでのみ表示されます。<br>
+                ※閲覧履歴/サイトデータ削除・別ブラウザで開くと消える可能性があります。
+              </div>
+            </div>
+          </div>
 
           <div class="rankStatusRow">
             <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
@@ -890,10 +1030,14 @@ document.addEventListener("keydown", (e) => {
 
 /* ===== X投稿リンク ===== */
 function buildXIntentURL(){
-  // ★ ここを、あなたの「バズ狙い＋非公式」文章に差し替えてOK
   const text =
-`投票しました！
-#日プ新世界 #日プ投票メーカー #PRODUCE101JAPAN新世界`;
+`あなたの1票が未来を変える🔥
+
+推しに今日も投票完了🗳️✨
+まだの人は今すぐ参加してね！
+
+#日プ新世界 #PRODUCE101JAPAN新世界
+※非公式ファン投票です`;
   const url = location.href;
   return "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url);
 }
@@ -913,6 +1057,179 @@ function buildSearchKey(t){
 const trainees = traineesOnly.map(x => ({...x, group:"trainee", searchKey: buildSearchKey(x)}));
 const candis = candidates.map(x => ({...x, group:"candidate", searchKey: buildSearchKey(x)}));
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
+
+/* =========================
+   ★ マイ投票（localStorage）追加
+========================= */
+const LS_TODAY_PREFIX = "vote_my_today_v1:";     // + YYYY-MM-DD
+const LS_COUNTS_KEY   = "vote_my_counts_v1";     // { id: number }
+const LS_TOTALSUB_KEY = "vote_my_totalSub_v1";   // number
+
+const btnMyToday  = document.getElementById("btnMyToday");
+const btnMyTotal  = document.getElementById("btnMyTotal");
+const panelMyToday = document.getElementById("panelMyToday");
+const panelMyTotal = document.getElementById("panelMyTotal");
+const myTodayMeta = document.getElementById("myTodayMeta");
+const myTotalMeta = document.getElementById("myTotalMeta");
+const myTodayGrid = document.getElementById("myTodayGrid");
+const myTotalGrid = document.getElementById("myTotalGrid");
+const myTop3El    = document.getElementById("myTop3");
+
+function safeJSONParse(s, fallback){
+  try{ return JSON.parse(s); }catch(_){ return fallback; }
+}
+function getCounts(){
+  return safeJSONParse(localStorage.getItem(LS_COUNTS_KEY) || "{}", {});
+}
+function setCounts(obj){
+  localStorage.setItem(LS_COUNTS_KEY, JSON.stringify(obj || {}));
+}
+function getTotalSub(){
+  return Number(localStorage.getItem(LS_TOTALSUB_KEY) || "0") || 0;
+}
+function setTotalSub(n){
+  localStorage.setItem(LS_TOTALSUB_KEY, String(Number(n || 0)));
+}
+function getTodayIds(dateStr){
+  const key = LS_TODAY_PREFIX + dateStr;
+  const v = safeJSONParse(localStorage.getItem(key) || "null", null);
+  return Array.isArray(v) ? v : null;
+}
+function setTodayIds(dateStr, ids){
+  const key = LS_TODAY_PREFIX + dateStr;
+  localStorage.setItem(key, JSON.stringify(ids || []));
+}
+
+function personInfo(id){
+  const p = byId.get(id);
+  const name = p ? (p.name || id) : id;
+  const img = p ? (p.img || "") : "";
+  const disp = name.split("(")[0];
+  return { id, name, disp, img };
+}
+
+function buildMyItemHTML(info, countText, badgeText){
+  const safeImg = info.img || "";
+  const safeName = (info.disp || info.name || info.id);
+  const badge = badgeText ? `<span class="myRankBadge">${badgeText}</span>` : "";
+  return `
+    <div class="myItem">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <div style="min-width:0; font-weight:1000; font-size:12px; color:#111; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ${safeName}
+        </div>
+        ${badge}
+      </div>
+      <div class="myThumb" style="margin-top:8px;">
+        ${safeImg ? `<img src="${safeImg}" alt="">` : ``}
+      </div>
+      <div class="myCount">${countText || ""}</div>
+    </div>
+  `;
+}
+
+function refreshMyToday(){
+  const date = todayTokyo();
+  const ids = getTodayIds(date);
+
+  if(!myTodayGrid || !myTodayMeta) return;
+
+  if(!ids || ids.length === 0){
+    myTodayMeta.textContent = `今日(${date})の投票はまだ保存されていません`;
+    myTodayGrid.innerHTML = "";
+    return;
+  }
+
+  myTodayMeta.textContent = `今日(${date})の投票：${ids.length}人`;
+  myTodayGrid.innerHTML = ids.map(id => {
+    const info = personInfo(id);
+    return buildMyItemHTML(info, "", "");
+  }).join("");
+}
+
+function refreshMyTotal(){
+  const counts = getCounts();
+  const totalSub = getTotalSub();
+
+  if(!myTotalGrid || !myTotalMeta || !myTop3El) return;
+
+  const entries = Object.entries(counts)
+    .map(([id, c]) => ({ id, count: Number(c)||0 }))
+    .filter(x => x.count > 0);
+
+  myTotalMeta.textContent = totalSub > 0
+    ? `これまでの投票回数：${totalSub}回（= 11人×${totalSub}回分カウント）`
+    : "累計はまだありません";
+
+  if(entries.length === 0){
+    myTop3El.innerHTML = "";
+    myTotalGrid.innerHTML = "";
+    return;
+  }
+
+  // 上位3名だけ「回数順にランキング表示」
+  const topSorted = [...entries].sort((a,b) => b.count - a.count || a.id.localeCompare(b.id));
+  const top3 = topSorted.slice(0,3);
+
+  myTop3El.innerHTML = top3.map((x, i) => {
+    const info = personInfo(x.id);
+    return buildMyItemHTML(info, `${x.count}回`, String(i+1));
+  }).join("");
+
+  // その他（安定のため名前順）
+  const rest = topSorted.slice(3).map(x => ({
+    ...x,
+    disp: personInfo(x.id).disp
+  })).sort((a,b) => (a.disp||a.id).localeCompare(b.disp||b.id, "ja"));
+
+  myTotalGrid.innerHTML = rest.map(x => {
+    const info = personInfo(x.id);
+    return buildMyItemHTML(info, `${x.count}回`, "");
+  }).join("");
+}
+
+function closeMyPanels(){
+  if(btnMyToday) btnMyToday.classList.remove("active");
+  if(btnMyTotal) btnMyTotal.classList.remove("active");
+  if(panelMyToday) panelMyToday.classList.remove("active");
+  if(panelMyTotal) panelMyTotal.classList.remove("active");
+}
+function togglePanel(which){
+  if(which === "today"){
+    const willOpen = !(panelMyToday && panelMyToday.classList.contains("active"));
+    closeMyPanels();
+    if(willOpen){
+      if(btnMyToday) btnMyToday.classList.add("active");
+      if(panelMyToday) panelMyToday.classList.add("active");
+      refreshMyToday();
+    }
+  } else {
+    const willOpen = !(panelMyTotal && panelMyTotal.classList.contains("active"));
+    closeMyPanels();
+    if(willOpen){
+      if(btnMyTotal) btnMyTotal.classList.add("active");
+      if(panelMyTotal) panelMyTotal.classList.add("active");
+      refreshMyTotal();
+    }
+  }
+}
+if(btnMyToday) btnMyToday.addEventListener("click", () => togglePanel("today"));
+if(btnMyTotal) btnMyTotal.addEventListener("click", () => togglePanel("total"));
+
+function saveMyVote(ids, dateStr){
+  // 今日の11人を保存（上書き）
+  setTodayIds(dateStr, ids.slice(0, MAX));
+
+  // 累計（各IDを+1）
+  const counts = getCounts();
+  for(const id of ids.slice(0, MAX)){
+    counts[id] = (Number(counts[id]) || 0) + 1;
+  }
+  setCounts(counts);
+
+  // 投票回数（送信成功した回数）
+  setTotalSub(getTotalSub() + 1);
+}
 
 /* ==== scroll位置保持 ==== */
 function preserveScroll(fn){
@@ -1103,6 +1420,9 @@ async function submitToGoogleForm(){
 
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
+    // ★ 送信成功した「この11人」を保存（今日＋累計）
+    saveMyVote(selected.slice(0, MAX), date);
+
     // ★ 投票完了モーダル表示
     openSuccessModal();
 
@@ -1114,7 +1434,10 @@ async function submitToGoogleForm(){
 
     clearAll();
 
+    // ランキング画面で見てるなら、マイ表示も更新できる
     if(rankView.classList.contains("active")){
+      refreshMyToday();
+      refreshMyTotal();
       fetchRankingCSV();
     }
   }catch(err){
@@ -1332,6 +1655,10 @@ function showRank(){
   voteView.classList.remove("active");
   btnRank.classList.add("active");
   btnVote.classList.remove("active");
+
+  // ★ ランキングに入ったら、マイ投票の表示も最新化（パネルは閉じたまま）
+  refreshMyToday();
+  refreshMyTotal();
 
   fetchRankingCSV();
 
