@@ -109,7 +109,7 @@
     }
     .tiktokBtn:active{ transform: translateY(1px); }
 
-    /* ===== Xシェア（追加） ===== */
+    /* ===== Xシェア（既存・今回は基本非表示） ===== */
     .shareRow{
       margin-top:10px;
       display:flex;
@@ -446,7 +446,7 @@
     #rankOpenSheet{ display:none; }
 
     /* =========================
-       ★ 投票完了モーダル（追加）
+       ★ 投票完了モーダル
     ========================== */
     .modalOverlay{
       position: fixed;
@@ -566,7 +566,7 @@
           <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
         </div>
 
-        <!-- Xシェア（追加：投票後に表示） ※今回はモーダルに出すので基本は非表示のままでもOK -->
+        <!-- （旧）Xシェア欄：残してあるけど、基本は使わない -->
         <div id="shareWrap" class="shareRow" style="display:none;">
           <a id="xShareBtn" class="xShareBtn" href="#" target="_blank" rel="noopener noreferrer">Xでシェア</a>
           <span class="sub">※押すとXの投稿画面が開きます</span>
@@ -634,7 +634,6 @@
               <tbody id="rankTbody"></tbody>
             </table>
 
-            <!-- ★ さらに表示（追加） -->
             <div id="rankMoreWrap" style="text-align:center; margin-top:12px; display:none;">
               <button id="rankMoreBtn" class="btn" type="button">さらに表示</button>
             </div>
@@ -648,9 +647,7 @@
     </div>
   </div>
 
-  <!-- =========================
-       ★ 投票完了モーダル（追加）
-  ========================== -->
+  <!-- ===== 投票完了モーダル ===== -->
   <div id="successModal" class="modalOverlay" aria-hidden="true">
     <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="successTitle">
       <div class="modalHead">
@@ -674,8 +671,6 @@
 ====================== */
 const RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXFpCzSxBGA2HUi1iiTUAgbRTbKXn2StuWI-Og82Wcv1z02sAN5QMizZztFdC8-7He31T-ecZq8cPa/pub?gid=1769988094&single=true&output=csv";
 const RANKING_SHOW_TOP = 30;
-
-/* ★ 追加表示の単位（30ずつ） */
 const RANKING_PAGE_SIZE = 30;
 
 /* ======================
@@ -687,7 +682,7 @@ const ENTRY_DATE    = "entry.1759038206";
 const ENTRY_IDS     = "entry.1038992501";
 const BLOCK_DUPLICATE_PER_DAY = true;
 
-/* ====== 練習生データ（あなたのまま） ====== */
+/* ====== 練習生データ ====== */
 const traineesOnly = [
   {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
   {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
@@ -697,7 +692,7 @@ const traineesOnly = [
   {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", id:"kobayashichisato"},
   {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", id:"katodaiki"},
   {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", id:"kwakdongmin"},
-  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", id:"suekawaeita"},
+  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjYqR.png", id:"suekawaeita"},
   {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", id:"horieito"},
   {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", id:"kanedaeito"},
   {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", id:"sakuraifuma"},
@@ -829,7 +824,7 @@ const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
 const resultCountEl = document.getElementById("resultCount");
 
-/* ===== Xシェア（既存） ===== */
+/* ===== Xシェア（旧） ===== */
 const shareWrap = document.getElementById("shareWrap");
 const xShareBtn = document.getElementById("xShareBtn");
 
@@ -839,7 +834,7 @@ const rankStatus = document.getElementById("rankStatus");
 const rankUpdated = document.getElementById("rankUpdated");
 const rankOpenSheet = document.getElementById("rankOpenSheet");
 
-/* ★ さらに表示（追加） */
+/* ===== さらに表示 ===== */
 const rankMoreWrap = document.getElementById("rankMoreWrap");
 const rankMoreBtn  = document.getElementById("rankMoreBtn");
 
@@ -858,13 +853,10 @@ let lastActionStack = [];
 let rankTimer = null;
 let hasLoadedRankOnce = false;
 
-/* ★ ランキングのページング状態（追加） */
 let rankAllData = [];
 let rankVisibleCount = RANKING_SHOW_TOP;
 
-/* =========================
-   ★ 投票完了モーダル（追加）
-========================= */
+/* ===== 投票完了モーダル ===== */
 const successModal  = document.getElementById("successModal");
 const successXBtn   = document.getElementById("successXBtn");
 const successOkBtn  = document.getElementById("successOkBtn");
@@ -898,6 +890,7 @@ document.addEventListener("keydown", (e) => {
 
 /* ===== X投稿リンク ===== */
 function buildXIntentURL(){
+  // ★ ここを、あなたの「バズ狙い＋非公式」文章に差し替えてOK
   const text =
 `投票しました！
 #日プ新世界 #日プ投票メーカー #PRODUCE101JAPAN新世界`;
@@ -1110,14 +1103,13 @@ async function submitToGoogleForm(){
 
     if(BLOCK_DUPLICATE_PER_DAY) setLastVoteToken(token);
 
-    // ★ ここで「投票を送信しました！」画面（モーダル）を出す
+    // ★ 投票完了モーダル表示
     openSuccessModal();
 
-    // （残しておいてもOK：下にもXを出したいなら）
+    // 旧シェア欄は使わない（使うなら display:flex に変える）
     if(shareWrap && xShareBtn){
       xShareBtn.href = buildXIntentURL();
-      // shareWrap.style.display = "flex"; // ←下にも出したいならコメント外す
-      shareWrap.style.display = "none";   // ←モーダルだけにしたいので非表示維持
+      shareWrap.style.display = "none";
     }
 
     clearAll();
@@ -1197,12 +1189,10 @@ function buildRankingLink(id){
   return `https://produce101.jp/profile/detail/?id=${encodeURIComponent(id)}`;
 }
 
-/* ★ ランキング描画（rankVisibleCount分だけ表示） */
 function renderRanking(){
   const list = rankAllData.slice(0, rankVisibleCount);
   const frag = document.createDocumentFragment();
 
-  // 同票は同率順位
   let prevVotes = null;
   let prevRank = 0;
 
@@ -1249,11 +1239,7 @@ function renderRanking(){
   const total = rankAllData.length;
   const shown = Math.min(rankVisibleCount, total);
 
-  if(total <= 0){
-    rankStatus.textContent = "データがありません";
-  } else {
-    rankStatus.textContent = `表示中: ${shown} / 全${total}件`;
-  }
+  rankStatus.textContent = total <= 0 ? "データがありません" : `表示中: ${shown} / 全${total}件`;
 
   if(rankMoreWrap && rankMoreBtn){
     if(shown < total){
@@ -1274,7 +1260,6 @@ async function fetchRankingCSV(){
     rankTbody.innerHTML = "";
     if(rankMoreWrap) rankMoreWrap.style.display = "none";
 
-    // 初期表示件数リセット（ランキング再取得のたびに最初は30）
     rankVisibleCount = RANKING_SHOW_TOP;
 
     const url = RANKING_CSV_URL + "&_ts=" + Date.now();
@@ -1321,7 +1306,6 @@ async function fetchRankingCSV(){
   }
 }
 
-/* ★ さらに表示 クリック */
 if(rankMoreBtn){
   rankMoreBtn.addEventListener("click", () => {
     const total = rankAllData.length;
