@@ -96,7 +96,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-left: 10px; /* ←間を広げたいならここを増やす */
+      margin-left: 10px;
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid rgba(0,0,0,.15);
@@ -213,7 +213,6 @@
       align-items:center;
     }
 
-    /* ←この下に追加するだけ */
     .stickyControls{
       position: sticky;
       top: 56px;
@@ -248,7 +247,7 @@
     .listSection{
       margin-top: 14px;
       border-radius: 18px;
-      overflow: visible; /* ★ここだけ修正：stickyが効くように */
+      overflow: visible;
       background-image: url("https://i.imgur.com/eTuwSDL.png");
       background-size: cover;
       background-position: center;
@@ -367,7 +366,6 @@
       padding: 10px 12px 12px;
     }
 
-    /* ★ 上位◯件の行：右側に注記を出す */
     .rankStatusRow{
       display:flex;
       align-items:center;
@@ -407,7 +405,6 @@
     }
     .rankNum{ width:44px; font-weight:900; }
 
-    /* ★ 票の列は見出しを消すので、右寄せだけ残す */
     .rankVotes{
       width:88px;
       text-align:right;
@@ -416,7 +413,6 @@
       white-space:nowrap;
     }
 
-    /* ★ ランキングの「名前＋写真」 */
     .rankLeft{
       display:flex;
       align-items:center;
@@ -447,10 +443,7 @@
       white-space:nowrap;
     }
 
-    /* ★ 「集計シート」リンクは見えないように隠す（機能は残る） */
-    #rankOpenSheet{
-      display:none;
-    }
+    #rankOpenSheet{ display:none; }
   </style>
 </head>
 
@@ -493,15 +486,14 @@
         </div>
 
         <div class="sub" style="margin-top:6px;">
-  ※上の顔をタップで削除できます<br>
-  ※投票権は日本時間0:00にリセットされます<br>
-  <span style="color:#d00; font-weight:900;">
-    ※本ページは非公式（ファンメイド）であり<br>
-    番組・運営・公式投票とは無関係です。
-    <!-- TikTokボタン（追加） -->
-    <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener noreferrer">TikTok</a>
-  </span>
-</div>
+          ※上の顔をタップで削除できます<br>
+          ※投票権は日本時間0:00にリセットされます<br>
+          <span style="color:#d00; font-weight:900;">
+            ※本ページは非公式（ファンメイド）であり<br>
+            番組・運営・公式投票とは無関係です。
+            <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener noreferrer">TikTok</a>
+          </span>
+        </div>
       </div>
 
       <div class="listSection">
@@ -538,7 +530,6 @@
         </div>
         <div class="rankBody">
 
-          <!-- ★ 上位◯件と注記 -->
           <div class="rankStatusRow">
             <p id="rankStatus" class="rankStatus">ランキングを読み込み中…</p>
             <p class="rankHint">※写真タップでprofileが表示されます。</p>
@@ -555,7 +546,13 @@
               </thead>
               <tbody id="rankTbody"></tbody>
             </table>
+
+            <!-- ★ さらに表示（追加） -->
+            <div id="rankMoreWrap" style="text-align:center; margin-top:12px; display:none;">
+              <button id="rankMoreBtn" class="btn" type="button">さらに表示</button>
+            </div>
           </div>
+
         </div>
       </div>
       <div class="sub" style="margin-top:10px;">
@@ -570,6 +567,9 @@
 ====================== */
 const RANKING_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXFpCzSxBGA2HUi1iiTUAgbRTbKXn2StuWI-Og82Wcv1z02sAN5QMizZztFdC8-7He31T-ecZq8cPa/pub?gid=1769988094&single=true&output=csv";
 const RANKING_SHOW_TOP = 30;
+
+/* ★ 追加表示の単位（30ずつ） */
+const RANKING_PAGE_SIZE = 30;
 
 /* ======================
    Googleフォーム送信設定
@@ -632,7 +632,7 @@ const traineesOnly = [
   {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
   {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
   {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
-  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", id:"okadoryuga"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHkqY.png", id:"okadoryuga"},
   {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
   {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
   {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
@@ -732,6 +732,10 @@ const rankStatus = document.getElementById("rankStatus");
 const rankUpdated = document.getElementById("rankUpdated");
 const rankOpenSheet = document.getElementById("rankOpenSheet");
 
+/* ★ さらに表示（追加） */
+const rankMoreWrap = document.getElementById("rankMoreWrap");
+const rankMoreBtn  = document.getElementById("rankMoreBtn");
+
 /* ===== view switch ===== */
 const btnVote = document.getElementById("btnVote");
 const btnRank = document.getElementById("btnRank");
@@ -746,6 +750,10 @@ let lastActionStack = [];
 
 let rankTimer = null;
 let hasLoadedRankOnce = false;
+
+/* ★ ランキングのページング状態（追加） */
+let rankAllData = [];
+let rankVisibleCount = RANKING_SHOW_TOP;
 
 /* ===== X投稿リンク（追加） ===== */
 function buildXIntentURL(){
@@ -771,19 +779,6 @@ function buildSearchKey(t){
 const trainees = traineesOnly.map(x => ({...x, group:"trainee", searchKey: buildSearchKey(x)}));
 const candis = candidates.map(x => ({...x, group:"candidate", searchKey: buildSearchKey(x)}));
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
-
-/* ★ランキング表示用：日本語名（カッコ前だけ） */
-function jpNameOnly(fullName){
-  return (fullName || "")
-    .split("(")[0]
-    .split("（")[0]
-    .trim();
-}
-function displayNameById(id){
-  const person = byId.get(id);
-  if(!person) return id;
-  return jpNameOnly(person.name);
-}
 
 /* ==== scroll位置保持 ==== */
 function preserveScroll(fn){
@@ -976,7 +971,6 @@ async function submitToGoogleForm(){
 
     alert("投票を送信しました！");
 
-    /* ===== 投票後にXシェアを出す（追加） ===== */
     if(shareWrap && xShareBtn){
       xShareBtn.href = buildXIntentURL();
       shareWrap.style.display = "flex";
@@ -1059,11 +1053,86 @@ function buildRankingLink(id){
   return `https://produce101.jp/profile/detail/?id=${encodeURIComponent(id)}`;
 }
 
+/* ★ ランキング描画（追加：rankVisibleCount分だけ表示） */
+function renderRanking(){
+  const list = rankAllData.slice(0, rankVisibleCount);
+
+  const frag = document.createDocumentFragment();
+
+  let prevVotes = null;
+  let prevRank = 0;
+
+  list.forEach((x, i) => {
+    const tr = document.createElement("tr");
+
+    let shownRank;
+    if (prevVotes !== null && x.votes === prevVotes) {
+      shownRank = prevRank;
+    } else {
+      shownRank = i + 1;
+      prevRank = shownRank;
+      prevVotes = x.votes;
+    }
+
+    const person = byId.get(x.id);
+    const imgUrl = person ? person.img : "";
+    const dispName = person ? person.name.split("(")[0] : x.id;
+
+    tr.innerHTML = `
+      <td class="rankNum">${shownRank}</td>
+      <td>
+        <div class="rankLeft">
+          <a class="rankThumbLink"
+             href="${buildRankingLink(x.id)}"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="profile">
+            <img class="rankThumb"
+                 src="${imgUrl}"
+                 alt=""
+                 onerror="this.style.display='none'">
+          </a>
+          <div class="rankName">${dispName}</div>
+        </div>
+      </td>
+      <td class="rankVotes">${x.votes}票</td>
+    `;
+    frag.appendChild(tr);
+  });
+
+  rankTbody.innerHTML = "";
+  rankTbody.appendChild(frag);
+
+  const total = rankAllData.length;
+  const shown = Math.min(rankVisibleCount, total);
+
+  if(total <= 0){
+    rankStatus.textContent = "データがありません";
+  } else {
+    rankStatus.textContent = `表示中: ${shown} / 全${total}件`;
+  }
+
+  // ボタン表示/文言
+  if(rankMoreWrap && rankMoreBtn){
+    if(shown < total){
+      rankMoreWrap.style.display = "block";
+      const left = total - shown;
+      const add = Math.min(RANKING_PAGE_SIZE, left);
+      rankMoreBtn.textContent = `さらに表示（+${add}）`;
+    } else {
+      rankMoreWrap.style.display = "none";
+    }
+  }
+}
+
 async function fetchRankingCSV(){
   try{
     rankStatus.textContent = "ランキングを読み込み中…";
     rankUpdated.textContent = "読み込み中…";
     rankTbody.innerHTML = "";
+    if(rankMoreWrap) rankMoreWrap.style.display = "none";
+
+    // 初期表示件数リセット（ランキング再取得のたびに最初は30）
+    rankVisibleCount = RANKING_SHOW_TOP;
 
     const url = RANKING_CSV_URL + "&_ts=" + Date.now();
     const res = await fetch(url, { method:"GET", cache:"no-store" });
@@ -1095,61 +1164,29 @@ async function fetchRankingCSV(){
       return a.id.localeCompare(b.id);
     });
 
-    const top = data.slice(0, RANKING_SHOW_TOP);
-    const frag = document.createDocumentFragment();
+    // 全データを保持して、rankVisibleCount分だけ描画
+    rankAllData = data;
+    renderRanking();
 
-    // ★ 同票は同率順位
-    let prevVotes = null;
-    let prevRank = 0;
-
-    top.forEach((x, i) => {
-      const tr = document.createElement("tr");
-
-      let shownRank;
-      if (prevVotes !== null && x.votes === prevVotes) {
-        shownRank = prevRank;
-      } else {
-        shownRank = i + 1;
-        prevRank = shownRank;
-        prevVotes = x.votes;
-      }
-
-      const person = byId.get(x.id);
-      const imgUrl = person ? person.img : "";
-      const dispName = person ? person.name.split("(")[0] : x.id;
-
-      tr.innerHTML = `
-        <td class="rankNum">${shownRank}</td>
-        <td>
-          <div class="rankLeft">
-            <a class="rankThumbLink"
-               href="${buildRankingLink(x.id)}"
-               target="_blank" rel="noopener noreferrer"
-               aria-label="profile">
-              <img class="rankThumb"
-                   src="${imgUrl}"
-                   alt=""
-                   onerror="this.style.display='none'">
-            </a>
-            <div class="rankName">${dispName}</div>
-          </div>
-        </td>
-        <td class="rankVotes">${x.votes}票</td>
-      `;
-      frag.appendChild(tr);
-    });
-
-    rankTbody.innerHTML = "";
-    rankTbody.appendChild(frag);
-
-    rankStatus.textContent = `上位${top.length}件を表示中（全${data.length}件）`;
     rankUpdated.textContent = `更新: ${nowTokyoTime()}`;
     hasLoadedRankOnce = true;
+
   }catch(err){
     console.error(err);
     rankStatus.textContent = "ランキングの読み込みに失敗…（公開設定/URL/ネットを確認してね）";
     rankUpdated.textContent = "更新: 失敗";
+    if(rankMoreWrap) rankMoreWrap.style.display = "none";
   }
+}
+
+/* ★ さらに表示 クリック（追加） */
+if(rankMoreBtn){
+  rankMoreBtn.addEventListener("click", () => {
+    const total = rankAllData.length;
+    if(total <= 0) return;
+    rankVisibleCount = Math.min(rankVisibleCount + RANKING_PAGE_SIZE, total);
+    renderRanking();
+  });
 }
 
 /* ======================
