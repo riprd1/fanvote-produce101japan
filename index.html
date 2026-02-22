@@ -635,6 +635,63 @@
       color: var(--sub);
       line-height:1.5;
     }
+
+    /* =========================
+       ★ 初回訪問ポップアップ（追加）
+    ========================== */
+    .welcomeOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .welcomeCard{
+      width: min(420px, 100%);
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      border: 1px solid rgba(0,0,0,.08);
+    }
+    .welcomeTitle{
+      font-weight: 1000;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .welcomeText{
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .welcomeBtn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      background: #111;
+      color: #fff;
+      font-weight: 1000;
+      text-decoration: none;
+      line-height: 1;
+    }
+    .welcomeClose{
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      font-size: 12px;
+      border: none;
+      background: none;
+      color: #666;
+      cursor: pointer;
+      font-weight: 900;
+    }
   </style>
 </head>
 
@@ -801,6 +858,26 @@
           <button id="successOkBtn" class="modalBtn" type="button">閉じる</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ★ 初回訪問ポップアップ（追加） -->
+  <div id="welcomeModal" class="welcomeOverlay" aria-hidden="true">
+    <div class="welcomeCard" role="dialog" aria-modal="true">
+      <div class="welcomeTitle">日プ投票メーカーを作成したあがっしです。</div>
+
+      <div class="welcomeText">
+        サイト継続とやる気のために是非Tiktokのフォローお願いします🥹<br>
+        下のボタンからプロフィールに飛べるので<br>
+        是非お願いします❤️‍🔥❤️‍🔥
+      </div>
+
+      <a class="welcomeBtn"
+         href="https://www.tiktok.com/@12agassi"
+         target="_blank"
+         rel="noopener noreferrer">あがっしを応援する❤️‍🔥</a>
+
+      <button class="welcomeClose" type="button" onclick="closeWelcomeModal()">閉じる</button>
     </div>
   </div>
 
@@ -1675,6 +1752,26 @@ setModeUI();
 renderSlots();
 renderGrid();
 updateAll();
+
+/* =========================
+   ★ 初回訪問ポップアップ（追加）
+========================= */
+function closeWelcomeModal(){
+  const modal = document.getElementById("welcomeModal");
+  if(modal){
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden","true");
+    localStorage.setItem("welcomeShown_v1","1");
+  }
+}
+window.addEventListener("load", () => {
+  const shown = localStorage.getItem("welcomeShown_v1");
+  const modal = document.getElementById("welcomeModal");
+  if(modal && !shown){
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden","false");
+  }
+});
 </script>
 </body>
 </html>
