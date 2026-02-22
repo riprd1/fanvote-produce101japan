@@ -329,6 +329,34 @@
       filter: none;
     }
 
+    /* =========================
+       ★ 辞退者（追加）
+       - 表示はするが、グレー＆選択不可
+    ========================== */
+    .withdrawn{
+      opacity: .35;
+      filter: grayscale(1);
+      outline: 2px solid rgba(0,0,0,.06);
+      pointer-events: none;
+    }
+    .withdrawn .profileBtn{
+      pointer-events: auto;
+      opacity: 1;
+      filter: none;
+    }
+    .withdrawn .avatar::after{
+      content: "※辞退";
+      position: absolute;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      font-size: 16px;
+      color:#d00;
+      background: rgba(255,255,255,.55);
+    }
+
     @media (max-width: 340px){
       .grid{grid-template-columns: 1fr;}
     }
@@ -1033,6 +1061,16 @@ const candidates = [
 
 const MAX = 11;
 
+/* =========================
+   ★ 辞退者ID（追加）
+   - 練習生：保里瑛都（horieito）
+   - 練習生候補：櫻井輝（sakuraihikaru）
+========================= */
+const WITHDRAWN_IDS = new Set([
+  "horieito",
+  "sakuraihikaru"
+]);
+
 /* ===== UI elements (vote) ===== */
 const toggleBtn = document.getElementById("toggleBtn");
 const modeText  = document.getElementById("modeText");
@@ -1372,8 +1410,12 @@ function renderGrid(){
 
   for(const t of list){
     const picked = selectedSet.has(t.id);
+    const withdrawn = WITHDRAWN_IDS.has(t.id);
+
     const card = document.createElement("div");
-    card.className = "card" + (picked ? " picked" : "");
+    card.className = "card"
+      + (picked ? " picked" : "")
+      + (withdrawn ? " withdrawn" : "");
     card.setAttribute("data-id", t.id);
 
     card.innerHTML = `
@@ -1407,6 +1449,9 @@ gridEl.addEventListener("click", (e) => {
 
 /* ==== 選択処理 ==== */
 function addSelected(id){
+  /* ★ 辞退者は選択不可（追加） */
+  if(WITHDRAWN_IDS.has(id)) return;
+
   if(selectedSet.has(id)) return;
   if(selected.length >= MAX){
     alert(`最大${MAX}人までです`);
