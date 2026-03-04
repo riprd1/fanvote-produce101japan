@@ -1422,10 +1422,18 @@ function renderGrid(){
   gridEl.innerHTML = "";
 
   for(const t of list){
-    const picked = selectedSet.has(t.id);
-    const withdrawn = WITHDRAWN_IDS.has(t.id);
 
-    const card = document.createElement("div");
+  if(t.type === "ad"){
+    const div = document.createElement("div");
+    div.innerHTML = t.html;
+    gridEl.appendChild(div);
+    continue;
+  }
+
+  const picked = selectedSet.has(t.id);
+  const withdrawn = WITHDRAWN_IDS.has(t.id);
+
+  const card = document.createElement("div");
     card.className = "card"
       + (picked ? " picked" : "")
       + (withdrawn ? " withdrawn" : "");
