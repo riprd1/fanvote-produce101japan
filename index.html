@@ -1014,18 +1014,9 @@ const traineesOnly = [
   {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", id:"liweize"},
   {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", id:"yohanemmanuel"},
   {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", id:"yadayoshiki"},
-{name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
-
-{type:"ad", html:`
-<div style="grid-column:1 / span 2; text-align:center; margin:6px 0;">
-<!-- admax -->
-<script src="https://adm.shinobi.jp/s/06f6dd31f0dd4404ff037edb4e522e6e"></script>
-<!-- admax -->
-</div>
-`},
-
-{name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
-{name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
+  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
+  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
+  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
   {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", id:"obayashiyusei"},
   {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
@@ -1422,18 +1413,10 @@ function renderGrid(){
   gridEl.innerHTML = "";
 
   for(const t of list){
+    const picked = selectedSet.has(t.id);
+    const withdrawn = WITHDRAWN_IDS.has(t.id);
 
-  if(t.type === "ad"){
-    const div = document.createElement("div");
-    div.innerHTML = t.html;
-    gridEl.appendChild(div);
-    continue;
-  }
-
-  const picked = selectedSet.has(t.id);
-  const withdrawn = WITHDRAWN_IDS.has(t.id);
-
-  const card = document.createElement("div");
+    const card = document.createElement("div");
     card.className = "card"
       + (picked ? " picked" : "")
       + (withdrawn ? " withdrawn" : "");
