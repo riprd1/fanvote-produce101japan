@@ -319,6 +319,35 @@ gtag('config', 'G-QYDLTG98R4');
       backdrop-filter: blur(6px);
     }
 
+    /* =========================
+       ★ お気に入りボタン（追加）
+    ========================== */
+    .favBtn{
+      position:absolute;
+      top:10px;
+      left:10px;
+      width:34px;
+      height:34px;
+      border-radius:999px;
+      border:2px solid rgba(255,215,0,.55);
+      background:rgba(255,255,255,.92);
+      color:#bbb;
+      font-size:18px;
+      line-height:1;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      backdrop-filter: blur(6px);
+      z-index:2;
+    }
+    .favBtn.active{
+      color:#f5c400;
+      border-color:#f5c400;
+      background:rgba(255,255,255,.96);
+    }
+
     .info{min-width:0;text-align:center}
     .name{
       font-weight:900;
@@ -339,6 +368,11 @@ gtag('config', 'G-QYDLTG98R4');
       opacity: 1;
       filter: none;
     }
+    .picked .favBtn{
+      pointer-events: auto;
+      opacity: 1;
+      filter: none;
+    }
 
     /* =========================
        ★ 辞退者（追加）
@@ -351,6 +385,11 @@ gtag('config', 'G-QYDLTG98R4');
       pointer-events: none;
     }
     .withdrawn .profileBtn{
+      pointer-events: auto;
+      opacity: 1;
+      filter: none;
+    }
+    .withdrawn .favBtn{
       pointer-events: auto;
       opacity: 1;
       filter: none;
@@ -1096,6 +1135,11 @@ const WITHDRAWN_IDS = new Set([
   "sakuraihikaru"
 ]);
 
+/* =========================
+   ★ お気に入り保存（追加）
+========================= */
+const LS_FAVORITES_KEY = "vote_favorites_v1";
+
 /* ===== UI elements (vote) ===== */
 const toggleBtn = document.getElementById("toggleBtn");
 const modeText  = document.getElementById("modeText");
@@ -1201,6 +1245,40 @@ function buildSearchKey(t){
 const trainees = traineesOnly.map(x => ({...x, group:"trainee", searchKey: buildSearchKey(x)}));
 const candis = candidates.map(x => ({...x, group:"candidate", searchKey: buildSearchKey(x)}));
 const byId = new Map([...trainees, ...candis].map(x => [x.id, x]));
+
+/* =========================
+   ★ お気に入り機能（追加）
+========================= */
+function getFavoriteIds(){
+  const ids = safeJSONParse(localStorage.getItem(LS_FAVORITES_KEY) || "[]", []);
+  return Array.isArray(ids) ? ids : [];
+}
+function setFavoriteIds(ids){
+  localStorage.setItem(LS_FAVORITES_KEY, JSON.stringify(ids || []));
+}
+function favoriteSet(){
+  return new Set(getFavoriteIds());
+}
+function isFavorite(id){
+  return favoriteSet().has(id);
+}
+function toggleFavorite(id){
+  const ids = getFavoriteIds();
+  const set = new Set(ids);
+  if(set.has(id)) set.delete(id);
+  else set.add(id);
+  setFavoriteIds([...set]);
+}
+function sortFavoritesFirst(list){
+  const favs = favoriteSet();
+  const favorites = [];
+  const others = [];
+  for(const item of list){
+    if(favs.has(item.id)) favorites.push(item);
+    else others.push(item);
+  }
+  return [...favorites, ...others];
+}
 
 /* =========================
    ★ マイ投票（localStorage）追加
@@ -1421,7 +1499,7 @@ function renderGrid(){
   const qRaw = searchEl.value.trim();
   const q = normalizeText(qRaw);
 
-  const list = currentList().filter(t => {
+  const filtered = currentList().filter(t => {
     if(!q) return true;
     const rawHit =
       (t.name || "").toLowerCase().includes(qRaw.toLowerCase()) ||
@@ -1430,12 +1508,17 @@ function renderGrid(){
     return rawHit || keyHit;
   });
 
+  const list = sortFavoritesFirst(filtered);
+
   resultCountEl.textContent = `${list.length}件`;
   gridEl.innerHTML = "";
+
+  const favs = favoriteSet();
 
   for(const t of list){
     const picked = selectedSet.has(t.id);
     const withdrawn = WITHDRAWN_IDS.has(t.id);
+    const favorite = favs.has(t.id);
 
     const card = document.createElement("div");
     card.className = "card"
@@ -1446,6 +1529,7 @@ function renderGrid(){
     card.innerHTML = `
       <div class="avatar">
         <img src="${t.img}" alt="">
+        <button class="favBtn${favorite ? " active" : ""}" type="button" data-fav-btn="1" aria-label="お気に入り">★</button>
         <a class="profileBtn"
            href="https://produce101.jp/profile/detail/?id=${encodeURIComponent(t.id)}"
            target="_blank" rel="noopener noreferrer"
@@ -1461,6 +1545,22 @@ function renderGrid(){
 }
 gridEl.addEventListener("click", (e) => {
   if (e.target.closest('[data-profile-link="1"]')) return;
+
+  const favBtn = e.target.closest('[data-fav-btn="1"]');
+  if(favBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    const card = e.target.closest(".card");
+    if(!card) return;
+    const id = card.getAttribute("data-id");
+    if(!id) return;
+    preserveScroll(() => {
+      toggleFavorite(id);
+      renderGrid();
+    });
+    return;
+  }
+
   const card = e.target.closest(".card");
   if(!card) return;
   const id = card.getAttribute("data-id");
