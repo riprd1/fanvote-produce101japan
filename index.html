@@ -806,6 +806,7 @@ gtag('config', 'G-QYDLTG98R4');
         <div class="row" style="margin-top:10px;">
   <button id="clearBtn" class="btn">リセット</button>
   <button id="undoBtn" class="btn">1人戻す</button>
+  <button id="prevVoteBtn" class="btn" type="button">前回の練習生に投票</button>
   <button id="voteBtn" class="btn primary" disabled>11人選んで投票</button>
 </div>
 
@@ -1150,6 +1151,7 @@ const countEl   = document.getElementById("count");
 const voteBtn   = document.getElementById("voteBtn");
 const clearBtn  = document.getElementById("clearBtn");
 const undoBtn   = document.getElementById("undoBtn");
+const prevVoteBtn = document.getElementById("prevVoteBtn");
 const resultCountEl = document.getElementById("resultCount");
 
 /* ===== Xシェア（旧） ===== */
@@ -1286,6 +1288,7 @@ function sortFavoritesFirst(list){
 const LS_TODAY_PREFIX = "vote_my_today_v1:";     // + YYYY-MM-DD
 const LS_COUNTS_KEY   = "vote_my_counts_v1";     // { id: number }
 const LS_TOTALSUB_KEY = "vote_my_totalSub_v1";   // number
+const LS_PREV_VOTE_KEY = "vote_prev_vote_v1";    // 前回の11人
 
 const btnMyToday  = document.getElementById("btnMyToday");
 const btnMyTotal  = document.getElementById("btnMyTotal");
@@ -1439,12 +1442,17 @@ if(btnMyToday) btnMyToday.addEventListener("click", () => togglePanel("today"));
 if(btnMyTotal) btnMyTotal.addEventListener("click", () => togglePanel("total"));
 
 function saveMyVote(ids, dateStr){
+  const savedIds = ids.slice(0, MAX);
+
   // 今日の11人を保存（上書き）
-  setTodayIds(dateStr, ids.slice(0, MAX));
+  setTodayIds(dateStr, savedIds);
+
+  // 前回の11人を保存
+  localStorage.setItem(LS_PREV_VOTE_KEY, JSON.stringify(savedIds));
 
   // 累計（各IDを+1）
   const counts = getCounts();
-  for(const id of ids.slice(0, MAX)){
+  for(const id of savedIds){
     counts[id] = (Number(counts[id]) || 0) + 1;
   }
   setCounts(counts);
@@ -1614,6 +1622,25 @@ function clearAll(){
   lastActionStack = [];
   updateAll();
 }
+function loadPreviousVote(){
+  const prev = safeJSONParse(localStorage.getItem(LS_PREV_VOTE_KEY) || "[]", []);
+  if(!Array.isArray(prev) || prev.length !== MAX){
+    alert("前回の投票データがありません。");
+    return;
+  }
+
+  const validIds = prev.filter(id => byId.has(id) && !WITHDRAWN_IDS.has(id)).slice(0, MAX);
+
+  if(validIds.length !== MAX){
+    alert("前回の投票データに現在選択できない練習生が含まれています。");
+    return;
+  }
+
+  selected = [...validIds];
+  selectedSet = new Set(validIds);
+  lastActionStack = [];
+  updateAll();
+}
 
 /* ==== 日付（Tokyo） ==== */
 function todayTokyo(){
@@ -1718,6 +1745,7 @@ toggleBtn.addEventListener("click", () => {
 });
 searchEl.addEventListener("input", () => preserveScroll(() => renderGrid()));
 undoBtn.addEventListener("click", () => preserveScroll(() => undo()));
+if(prevVoteBtn) prevVoteBtn.addEventListener("click", () => preserveScroll(() => loadPreviousVote()));
 clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
@@ -1907,7 +1935,7 @@ function showRank(){
   btnRank.classList.add("active");
   btnVote.classList.remove("active");
 
-  // ★ ランキングに入ったら、マイ投票の表示も最新化（パネルは閉じたまま）
+  // ★ ランキングに入ったら、マイ表示も最新化（パネルは閉じたまま）
   refreshMyToday();
   refreshMyTotal();
 
