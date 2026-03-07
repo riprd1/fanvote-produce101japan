@@ -1750,7 +1750,15 @@ clearBtn.addEventListener("click", () => {
   if(!confirm("選択をリセットしますか？")) return;
   preserveScroll(() => clearAll());
 });
-voteBtn.addEventListener("click", () => submitToGoogleForm());
+voteBtn.addEventListener("click", () => {
+
+  // ★ 前回投票を先に保存（通信失敗でも残る）
+  if(selected.length === MAX){
+    localStorage.setItem(LS_PREV_VOTE_KEY, JSON.stringify(selected.slice(0, MAX)));
+  }
+
+  submitToGoogleForm();
+});
 
 /* ======================
    ランキングCSV読み込み
